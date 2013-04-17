@@ -1,0 +1,189 @@
+<!DOCTYPE html>  <html> <head>   <title>tds.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="../docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="connection.html">                 connection.js               </a>                                           <a class="source" href="defaults.html">                 defaults.js               </a>                                           <a class="source" href="packetBuilder.html">                 packetBuilder.js               </a>                                           <a class="source" href="responseParser.html">                 responseParser.js               </a>                                           <a class="source" href="rowParser.html">                 rowParser.js               </a>                                           <a class="source" href="tds.html">                 tds.js               </a>                                           <a class="source" href="typeParser.html">                 typeParser.js               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">       <ul>        <li>         <a href="../chart/tds_chart.html">tds modul structure (overview)</a>        </li>       </ul>             <h1>               tds.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <h2>modul TDS    <a id="top"></a></h2>
+
+<h3>Author: <span> H.Ristau</span></h3>
+
+<p>Pure javascript modul to connect MSSQL Databases over the TDS protocol.
+TDS version 7.0 will be used, so connections to SQL Server 2000, 2005 and 2008 are possible.</p>
+
+<h4>requires:</h4>
+
+<ul>
+<li>util</li>
+<li>events</li>
+<li><a href="./defaults.html">defaults.js</a></li>
+<li><a href="./connection.html">connection.js</a></li>
+<li><a href="https://github.com/coopernurse/node-pool">generic_pool.js</a></li>
+</ul>
+
+<h3>functions:</h3>
+
+<ul>
+<li><a href="#connect">connect(config, callback)</a></li>
+<li><a href="#end">end()</a></li>
+</ul>             </td>             <td class="code">               <div class="highlight"><pre><span class="kd">var</span> <span class="nx">EventEmitter</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;events&#39;</span><span class="p">).</span><span class="nx">EventEmitter</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">util</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;util&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">defaults</span> <span class="o">=</span>  <span class="nx">require</span><span class="p">(</span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/defaults&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Connection</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/connection&#39;</span><span class="p">);</span>
+
+
+</pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>generic-pool object </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+<span class="kd">var</span> <span class="nx">genericPool</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;generic-pool&#39;</span><span class="p">);</span>
+
+
+</pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>cache of existing client pools </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+<span class="kd">var</span> <span class="nx">pools</span> <span class="o">=</span> <span class="p">{};</span>
+
+
+<span class="kd">var</span> <span class="nx">TDS</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">connectionConstructor</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">EventEmitter</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">Connection</span> <span class="o">=</span> <span class="nx">connectionConstructor</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">defaults</span> <span class="o">=</span> <span class="nx">defaults</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="nx">util</span><span class="p">.</span><span class="nx">inherits</span><span class="p">(</span><span class="nx">TDS</span><span class="p">,</span> <span class="nx">EventEmitter</span><span class="p">);</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="connect" /></p>
+
+<h2>function TDS.connect</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>config (s. defaults.js)</li>
+<li>callback</li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>Connection</em></li>
+</ul>
+
+<p>returns a database connection.
+when a connectionpool is build before,
+a connention from the pool will be returned if one availible
+otherwise the pool will be build</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+<span class="nx">TDS</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">connect</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">config</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+  <span class="kd">var</span> <span class="nx">c</span> <span class="o">=</span> <span class="nx">config</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">cb</span> <span class="o">=</span> <span class="nx">callback</span><span class="p">;</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>allow for no config to be passed </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="k">if</span><span class="p">(</span><span class="k">typeof</span> <span class="nx">c</span> <span class="o">===</span> <span class="s1">&#39;function&#39;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">cb</span> <span class="o">=</span> <span class="nx">c</span><span class="p">;</span>
+    <span class="nx">c</span> <span class="o">=</span> <span class="nx">defaults</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>get unique pool name even if object was used as config</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="kd">var</span> <span class="nx">poolName</span> <span class="o">=</span> <span class="k">typeof</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="o">===</span> <span class="s1">&#39;string&#39;</span> <span class="o">?</span> <span class="nx">c</span> <span class="o">:</span> <span class="nx">c</span><span class="p">.</span><span class="nx">ConnectionString</span><span class="p">.</span><span class="nx">Login</span> <span class="o">+</span>
+                                              <span class="nx">c</span><span class="p">.</span><span class="nx">ConnectionString</span><span class="p">.</span><span class="nx">Server</span> <span class="o">+</span>
+                                              <span class="nx">c</span><span class="p">.</span><span class="nx">ConnectionString</span><span class="p">.</span><span class="nx">Port</span> <span class="o">+</span>
+                                              <span class="nx">c</span><span class="p">.</span><span class="nx">ConnectionString</span><span class="p">.</span><span class="nx">Database</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">pool</span> <span class="o">=</span> <span class="nx">pools</span><span class="p">[</span><span class="nx">poolName</span><span class="p">];</span>
+
+  <span class="k">if</span><span class="p">(</span><span class="nx">pool</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">pool</span><span class="p">.</span><span class="nx">acquire</span><span class="p">(</span><span class="nx">cb</span><span class="p">);</span>
+  <span class="p">}</span>
+
+
+  </pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>define the connectionpool </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="kd">var</span> <span class="nx">pool</span> <span class="o">=</span> <span class="nx">pools</span><span class="p">[</span><span class="nx">poolName</span><span class="p">]</span> <span class="o">=</span> <span class="nx">genericPool</span><span class="p">.</span><span class="nx">Pool</span><span class="p">({</span>
+
+    <span class="nx">name</span><span class="o">:</span> <span class="nx">poolName</span><span class="p">,</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>creating a connection
+       the callback requires the parameter error and connection </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+    <span class="nx">create</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>the connection object </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="kd">var</span> <span class="nx">connection</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">self</span><span class="p">.</span><span class="nx">Connection</span><span class="p">(</span><span class="nx">c</span><span class="p">);</span>
+
+      <span class="nx">connection</span><span class="p">.</span><span class="nx">connect</span><span class="p">();</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>function connectError handels errors</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="kd">var</span> <span class="nx">connectError</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;connectError: #####################################&#39;</span><span class="p">);</span>
+        <span class="nx">connection</span><span class="p">.</span><span class="nx">removeListener</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">,</span> <span class="nx">connectSuccess</span><span class="p">);</span>
+        <span class="nx">pool</span><span class="p">.</span><span class="nx">destroy</span><span class="p">(</span><span class="nx">connection</span><span class="p">);</span>
+
+        </pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>callback with error </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+        <span class="nx">callback</span><span class="p">(</span><span class="nx">connection</span><span class="p">.</span><span class="nx">error</span><span class="p">,</span> <span class="kc">null</span><span class="p">);</span>
+      <span class="p">};</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>register function for error event </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="nx">connection</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="nx">connectError</span><span class="p">);</span>
+
+      <span class="kd">var</span> <span class="nx">connectSuccess</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="c1">//console.log(&#39;connectSuccess&#39;);</span>
+
+        </pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>handle connected connection background errors by emitting event via emit the error event and removing errored connection from the pool </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+        <span class="nx">connection</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;error!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!&#39;</span><span class="p">);</span>
+          <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="nx">e</span><span class="p">,</span> <span class="nx">connection</span><span class="p">);</span>
+          <span class="nx">pool</span><span class="p">.</span><span class="nx">destroy</span><span class="p">(</span><span class="nx">connection</span><span class="p">);</span>
+        <span class="p">});</span>
+        </pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>callback with connection </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+        <span class="nx">callback</span><span class="p">(</span><span class="nx">connection</span><span class="p">.</span><span class="nx">error</span><span class="p">,</span> <span class="nx">connection</span><span class="p">);</span>
+      <span class="p">};</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-15">&#182;</a>               </div>               <p>register function connectSuccess once for login event </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="nx">connection</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s1">&#39;login&#39;</span><span class="p">,</span> <span class="nx">connectSuccess</span><span class="p">);</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-16">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-16">&#182;</a>               </div>               <p>register function connectErroe for error event </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="nx">connection</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="nx">connectError</span><span class="p">);</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p>register function() for close event </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="nx">connection</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;close&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nx">pool</span><span class="p">.</span><span class="nx">release</span><span class="p">(</span><span class="nx">connection</span><span class="p">);</span>
+      <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">destroy</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">connection</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">connection</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+    <span class="p">},</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-18">&#182;</a>               </div>               <p>setting pool parameter from defaults object </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+    <span class="nx">max</span><span class="o">:</span> <span class="nx">defaults</span><span class="p">.</span><span class="nx">poolSize</span><span class="p">,</span>
+    <span class="nx">idleTimeoutMillis</span><span class="o">:</span> <span class="nx">defaults</span><span class="p">.</span><span class="nx">poolIdleTimeout</span><span class="p">,</span>
+    <span class="nx">log</span><span class="o">:</span> <span class="kc">false</span>
+  <span class="p">});</span>
+
+
+  <span class="k">return</span> <span class="nx">pool</span><span class="p">.</span><span class="nx">acquire</span><span class="p">(</span><span class="nx">cb</span><span class="p">);</span>
+<span class="p">}</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-19">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="end" /></p>
+
+<h2>function TDS.end</h2>
+
+<p>closes the database connection and destroys the connection pool</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+
+<span class="nx">TDS</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">end</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">pools</span><span class="p">).</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">pool</span> <span class="o">=</span> <span class="nx">pools</span><span class="p">[</span><span class="nx">name</span><span class="p">];</span>
+    <span class="nx">pool</span><span class="p">.</span><span class="nx">drain</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="nx">pool</span><span class="p">.</span><span class="nx">destroyAllNow</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">})</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">TDS</span><span class="p">(</span><span class="nx">Connection</span><span class="p">);</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

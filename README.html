@@ -1,0 +1,259 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><style>html { font-size: 100%; overflow-y: scroll; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+
+body{
+  color:#444;
+  font-family:Georgia, Palatino, 'Palatino Linotype', Times,
+              'Times New Roman', serif,
+              "Hiragino Sans GB", "STXihei", "微软雅黑";
+  font-size:12px;
+  line-height:1.5em;
+  background:#fefefe;
+  width: 45em;
+  margin: 10px auto;
+  padding: 1em;
+  outline: 1300px solid #FAFAFA;
+}
+
+a{ color: #0645ad; text-decoration:none; font-weight: bold;}
+a:visited{ color: ##0645ad; }
+a:hover{ color: #06e; }
+a:active{ color:#faa700; }
+a:focus{ outline: thin dotted; }
+a:hover, a:active{ outline: 0; }
+
+span.backtick {
+  border:1px solid #EAEAEA;
+  border-radius:3px;
+  background:#F8F8F8;
+  padding:0 3px 0 3px;
+}
+
+::-moz-selection{background:rgba(255,255,0,0.3);color:#000}
+::selection{background:rgba(255,255,0,0.3);color:#000}
+
+a::-moz-selection{background:rgba(255,255,0,0.3);color:#0645ad}
+a::selection{background:rgba(255,255,0,0.3);color:#0645ad}
+
+p{
+margin:1em 0;
+}
+
+img{
+max-width:100%;
+}
+
+h1,h2,h3,h4,h5,h6{
+font-weight:normal;
+color:#111;
+line-height:1em;
+}
+h4,h5,h6{ font-weight: bold; }
+h1{ font-size:2.5em; }
+h2{ font-size:2em; border-bottom:1px solid silver; padding-bottom: 5px; }
+h3{ font-size:1.5em; }
+h4{ font-size:1.2em; }
+h5{ font-size:1em; }
+h6{ font-size:0.9em; }
+
+blockquote{
+color:#666666;
+margin:0;
+padding-left: 3em;
+border-left: 0.5em #EEE solid;
+}
+hr { display: block; height: 2px; border: 0; border-top: 1px solid #aaa;border-bottom: 1px solid #eee; margin: 1em 0; padding: 0; }
+
+
+pre , code, kbd, samp { 
+  color: #000; 
+  font-family: monospace; 
+  font-size: 0.88em; 
+  border-radius:3px;
+  background-color: #F8F8F8;
+  border: 1px solid #CCC; 
+  line-height: 1em;
+}
+pre { white-space: pre; white-space: pre-wrap; word-wrap: break-word; padding: 5px;}
+pre code { border: 0px !important; }
+code { padding: 0 3px 0 3px; }
+
+b, strong { font-weight: bold; }
+
+dfn { font-style: italic; }
+
+ins { background: #ff9; color: #000; text-decoration: none; }
+
+mark { background: #ff0; color: #000; font-style: italic; font-weight: bold; }
+
+sub, sup { font-size: 75%; line-height: 0; position: relative; vertical-align: baseline; }
+sup { top: -0.5em; }
+sub { bottom: -0.25em; }
+
+ul, ol { margin: 1em 0; padding: 0 0 0 2em; }
+li p:last-child { margin:0 }
+dd { margin: 0 0 0 2em; }
+
+img { border: 0; -ms-interpolation-mode: bicubic; vertical-align: middle; }
+
+table { border-collapse: collapse; border-spacing: 0; }
+td { vertical-align: top; }
+
+@media only screen and (min-width: 480px) {
+body{font-size:14px;}
+}
+
+@media only screen and (min-width: 768px) {
+body{font-size:16px;}
+}
+
+@media print {
+  * { background: transparent !important; color: black !important; filter:none !important; -ms-filter: none !important; }
+  body{font-size:12pt; max-width:100%;}
+  a, a:visited { text-decoration: underline; }
+  hr { height: 1px; border:0; border-bottom:1px solid black; }
+  a[href]:after { content: " (" attr(href) ")"; }
+  abbr[title]:after { content: " (" attr(title) ")"; }
+  .ir a:after, a[href^="javascript:"]:after, a[href^="#"]:after { content: ""; }
+  pre, blockquote { border: 1px solid #999; padding-right: 1em; page-break-inside: avoid; }
+  tr, img { page-break-inside: avoid; }
+  img { max-width: 100% !important; }
+  @page :left { margin: 15mm 20mm 15mm 10mm; }
+  @page :right { margin: 15mm 10mm 15mm 20mm; }
+  p, h2, h3 { orphans: 3; widows: 3; }
+  h2, h3 { page-break-after: avoid; }
+}</style></head><body><h1 id="tds-node-implementation-of-the-tds-protocol-for-sql-server">tds (node implementation of the TDS protocol for SQL Server)</h1>
+
+<p>tds is an implementation of the <a href="http://msdn.microsoft.com/en-us/library/dd304523.aspx">TDS protocol</a>,
+which is used for communication with Microsoft's SQL Server.</p>
+
+<h2 id="status">Status</h2>
+
+<p>Current version: v0.0.1</p>
+
+<h2 id="requierements">requierements:</h2>
+
+<ul>
+<li>Windows System with <a href="http://nodejs.org">node.js</a> (version &gt;= 0.6.6) <br />
+<em>(other OS should be work too, but not tested until now)</em></li>
+<li>SQL Server (version &gt;= 2000) connection over TCP/IP (SQL authentification), <br />
+<a href="http://www.microsoft.com/de-de/download/details.aspx?id=29062">SQL Server Express 2012</a></li>
+</ul>
+
+<h2 id="install">install</h2>
+
+<h3 id="requierd-modules">requierd modules</h3>
+
+<ul>
+<li><strong>ansi-color</strong> (used by tds_test.js) <br />
+available on github: <a href="https://github.com/loopj/commonjs-ansi-color">https://github.com/loopj/commonjs-ansi-color</a></li>
+<li><strong>generic-pool</strong> (used by tds.connection) <br />
+available on github: <a href="https://github.com/coopernurse/node-pool">https://github.com/coopernurse/node-pool</a></li>
+</ul>
+
+<p>install the <strong>tds</strong> modul manually by copying the tds folder into the node_modules folder (npm coming soon) edit default.js, configure your database connection </p>
+
+<pre><code>module.exports = {
+        ConnectionString : {
+            /** database server */
+            Server:'5CB2175RH5',
+            /** database user's name */
+            Login: 'sa',
+            /** name of database to connect */
+            Database: 'master',
+            /** database user's password */
+            Password: 'pilsbier',
+            /** database port */
+            Port: 1433,
+            /** socket-connection timeout */
+            Timeout:10000,
+        },
+
+        /** number of connections to use in connection pool
+                0 will disable connection pooling
+        */
+        poolSize: 0,
+        /** duration of node-pool timeout */
+        poolIdleTimeout: 30000000,
+        /** tds_port */
+        tdsServerPort: 8888
+    }
+</code></pre>
+
+<ol>
+<li>open a commad shell</li>
+<li>navigate to your node folder (i.e. "c:\program files\nodejs\")</li>
+<li><code>cd node_modules</code></li>
+<li><code>cd tds</code></li>
+<li>start the tds server:
+<code>node tds_server</code></li>
+</ol>
+
+<p>normally tds_server listen at port 8888 <br />
+to test your installation, start your browser and fire a simple request like: <br />
+<code>http://localhost:8888/tds?select getdate() as d</code></p>
+
+<p>on a working system the response of the example request looks like the following JSON data with the actual date:</p>
+
+<pre><code>{
+
+    "result": [
+        {
+            "colData": [
+                {
+                    "value": "d",
+                    "precision": null,
+                    "scale": null,
+                    "type": 61
+                }
+            ],
+            "rows": [
+                [
+                    "2012-11-02T16:15:48.716Z"
+                ]
+            ],
+            "outputParams": [ ],
+            "returnStatus": null
+        }
+    ],
+    "error": {
+        "sqlErrNo": null,
+        "message": ""
+    }
+
+}
+</code></pre>
+
+<p><strong><em>notice:</em></strong> make sure, that your browser is able to handle http-headers <br />
+with <code>'Content-Type': 'application/json; charset=utf-8'</code>, for Firefox you can use <a href="http://www.jsonview.com">JSONView</a> </p>
+
+<h2 id="test">Test</h2>
+
+<p>after install you are able to run the tests</p>
+
+<ol>
+<li>change to your node folder </li>
+<li><code>cd node_modules</code></li>
+<li><code>cd tds</code></li>
+<li><code>node tds_test</code></li>
+</ol>
+
+<h2 id="documentation">Documentation</h2>
+
+<p>Modul structure overview:</p>
+
+<p><img src="./docs/chart/images/tdsStructureMin.png" alt="modul structure" /></p>
+
+<p>browse the deatiled documentation <a href=".\docs\chart\tds_chart.html">here</a>. (node_modules/tds/docs/chart/tds_chart.html)</p>
+
+<h2 id="license">License</h2>
+
+<p>(The MIT License)</p>
+
+<p>Copyright (c) 2010-2012 Mike D Pilsbury</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+</body>

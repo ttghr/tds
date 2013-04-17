@@ -1,0 +1,1415 @@
+<!DOCTYPE html>  <html> <head>   <title>typeParser.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="../docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="connection.html">                 connection.js               </a>                                           <a class="source" href="defaults.html">                 defaults.js               </a>                                           <a class="source" href="packetBuilder.html">                 packetBuilder.js               </a>                                           <a class="source" href="responseParser.html">                 responseParser.js               </a>                                           <a class="source" href="rowParser.html">                 rowParser.js               </a>                                           <a class="source" href="tds.html">                 tds.js               </a>                                           <a class="source" href="typeParser.html">                 typeParser.js               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">       <ul>        <li>         <a href="../chart/tds_chart.html">tds modul structure (overview)</a>        </li>       </ul>             <h1>               typeParser.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <h3>Author: <span> H.Ristau</span><a id="top"></a></h3>
+
+<p>methods for parsing the TDS datatypes.
+The array tp contains the relation between parsing method and datatype.</p>
+
+<h3>prototype:</h3>
+
+<ul>
+<li><a href="#bigIntBufferToString">bigIntBufferToString(buffer)</a></li>
+<li><a href="#intToHexStr">intToHexStr(number, maxVal)</a></li>
+<li><a href="#parseType">parseType(type, data, offset, precision, scale)</a></li>
+<li><a href="#parseNull">parseNull(data, offset, len)</a></li>
+<li><a href="#parseTinyInt">parseTinyInt(data, offset, len)</a></li>
+<li><a href="#parseBit">parseBit(data, offset, len)</a></li>
+<li><a href="#parseSmallInt">parseSmallInt(data, offset, len)</a></li>
+<li><a href="#parseInt">parseInt(data, offset, len)</a></li>
+<li><a href="#parseBigInt">parseBigInt(data, offset, len)</a></li>
+<li><a href="#parseSmallDateTime">parseSmallDateTime(data, offset, len)</a></li>
+<li><a href="#parseReal">parseReal(data, offset, len)</a></li>
+<li><a href="#parseMoney">parseMoney(data, offset, len)</a></li>
+<li><a href="#parseDatetime">parseDatetime(data, offset, len)</a></li>
+<li><a href="#parseFloat">parseFloat(data, offset, len)</a></li>
+<li><a href="#parseSmallMoney">parseSmallMoney(data, offset, len)</a></li>
+<li><a href="#parseGuid">parseGuid(data, offset, len)</a></li>
+<li><a href="#parseNint">parseNint(data, offset, len)</a></li>
+<li><a href="#parseNbit">parseNbit(data, offset, len)</a></li>
+<li><a href="#parseNnumeric">parseNnumeric(data, offset, len)</a></li>
+<li><a href="#parseNfloat">parseNfloat(data, offset, len)</a></li>
+<li><a href="#parseNmoney">parseNmoney(data, offset, len)</a></li>
+<li><a href="#parseNdatetime">parseNdatetime(data, offset, len)</a></li>
+<li><a href="#parseChar">parseChar(data, offset, len)</a></li>
+<li><a href="#parseVarchar">parseVarchar(data, offset, len)</a></li>
+<li><a href="#parseBinary">parseBinary(data, offset, len)</a></li>
+<li><a href="#parseVarBinary">parseVarBinary(data, offset, len)</a></li>
+<li><a href="#parseVarchar">parseVarchar(data, offset, len)</a></li>
+<li><a href="#parseNvarchar">parseNvarchar(data, offset, len)</a></li>
+<li><a href="#parseNchar">parseNchar(data, offset, len)</a></li>
+<li><a href="#parseText">parseText(data, offset, len)</a></li>
+<li><a href="#parseImage">parseImage(data, offset, len)</a></li>
+<li><a href="#parseNtext">parseNtext(data, offset, len)</a></li>
+<li><a href="#parseInfo">parseInfo(data, offset, len)</a></li>
+</ul>             </td>             <td class="code">               <div class="highlight"><pre><span class="kd">var</span> <span class="nx">typeParser</span> <span class="o">=</span> <span class="p">{</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseNvarchar" /></p>
+
+<h2>function parseNvarchar</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert usc2 buffer to string</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseNvarchar</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span> <span class="o">:</span> <span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;ucs2&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span><span class="p">),</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseVarchar" /></p>
+
+<h2>function parseVarchar</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert utf8 buffer to string</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseVarchar</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span><span class="p">),</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+
+</pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseNull" /></p>
+
+<h2>function parseNull</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>returns null, nothing else</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseNull</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="kc">null</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseTinyInt" /></p>
+
+<h2>function parseTinyInt</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>int</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert 1 byte to integer</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseTinyInt</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt8</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseBit" /></p>
+
+<h2>function parseBit</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>int</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert 1 byte to integer 0 or 1</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseBit</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">readUInt8</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseSmallInt" /></p>
+
+<h2>function parseSmallInt</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>int</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert 2 byte to integer</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseSmallInt</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readInt16LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseInt" /></p>
+
+<h2>function parseInt</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>int</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert 4 byte to integer</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nb">parseInt</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readInt32LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseSmallDateTime" /></p>
+
+<h2>function parseSmallDateTime</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>Date</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert smalldatetime to Date</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseSmallDateTime</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+</pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>One 2-byte signed integer that represents the number of days since January 1, 1900.
+  Negative numbers are allowed to represents dates since January 1, 1753.</p>
+
+<p>One 2-byte unsigned integer that represents the number of one three-hundredths of a second (300 counts per second)
+  elapsed since 12 AM that day.</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+    <span class="kd">var</span> <span class="nx">y</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>    <span class="c1">//Year</span>
+    <span class="kd">var</span> <span class="nx">s</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="nx">offset</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>  <span class="c1">//seconds/300</span>
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+    <span class="nx">val</span><span class="p">.</span><span class="nx">setFullYear</span><span class="p">(</span><span class="mi">1900</span><span class="p">);</span>
+
+    <span class="nx">val</span><span class="p">.</span><span class="nx">setDate</span><span class="p">(</span><span class="nx">val</span><span class="p">.</span><span class="nx">getDate</span><span class="p">()</span> <span class="o">+</span> <span class="nx">y</span><span class="p">);</span>
+    <span class="nx">val</span><span class="p">.</span><span class="nx">setMinutes</span><span class="p">(</span><span class="nx">val</span><span class="p">.</span><span class="nx">getMinutes</span><span class="p">()</span><span class="o">+</span><span class="nx">s</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseReal" /></p>
+
+<h2>function parseReal</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>float</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert a 32 bit float(real) to float</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseReal</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//check Null</span>
+      <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readFloatLE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span> <span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseMoney" /></p>
+
+<h2>function parseMoney</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>float</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert money to float</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseMoney</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">val1</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt32LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span> <span class="o">/</span> <span class="mf">10000.0</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">val2</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt32LE</span><span class="p">(</span><span class="nx">offset</span><span class="o">+</span><span class="mi">4</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span> <span class="o">/</span> <span class="mf">10000.0</span><span class="p">;</span>
+
+    <span class="kd">var</span> <span class="nx">val3</span> <span class="o">=</span> <span class="nx">val1</span><span class="o">*</span><span class="mi">4294967296</span><span class="p">;</span>
+    <span class="nx">val3</span> <span class="o">+=</span> <span class="nx">val2</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val3</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseSmallMoney" /></p>
+
+<h2>function parseSmallMoney</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>float</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert smallmoney to float</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseSmallMoney</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt32LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span> <span class="o">/</span> <span class="mf">10000.0</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+
+</pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseDatetime" /></p>
+
+<h2>function parseDatetime</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>Date</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert datetime to Date</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseDatetime</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+<span class="cm">/*    *</span>
+<span class="cm">    One 4-byte signed integer that represents the number of days since January 1, 1900.</span>
+<span class="cm">    Negative numbers are allowed to represents dates since January 1, 1753.</span>
+
+<span class="cm">    One 4-byte unsigned integer that represents the number of one three-hundredths of a second (300 counts per second)</span>
+<span class="cm">    elapsed since 12 AM that day.</span>
+<span class="cm">*/</span>
+
+    <span class="kd">var</span> <span class="nx">y</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt32LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>    <span class="c1">//Year</span>
+    <span class="kd">var</span> <span class="nx">s</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt32LE</span><span class="p">(</span><span class="nx">offset</span><span class="o">+</span><span class="mi">4</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>  <span class="c1">//seconds/300</span>
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+    <span class="nx">val</span><span class="p">.</span><span class="nx">setFullYear</span><span class="p">(</span><span class="mi">1900</span><span class="p">);</span>
+
+    <span class="nx">val</span><span class="p">.</span><span class="nx">setDate</span><span class="p">(</span><span class="nx">val</span><span class="p">.</span><span class="nx">getDate</span><span class="p">()</span> <span class="o">+</span> <span class="nx">y</span><span class="p">);</span>
+
+    <span class="nx">val</span><span class="p">.</span><span class="nx">setMilliseconds</span><span class="p">(</span><span class="nx">val</span><span class="p">.</span><span class="nx">getMilliseconds</span><span class="p">()</span><span class="o">+</span><span class="p">(</span><span class="nx">s</span><span class="o">/</span><span class="mf">0.3</span><span class="p">));</span>
+
+    <span class="c1">//date object starts at 01.01.1970 SQL-Server datetime starts at 01.01.1795</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">val</span> <span class="o">==</span> <span class="s1">&#39;Invalid Date&#39;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">val</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-15">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseFloat" /></p>
+
+<h2>function parseFloat</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>float</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert a 64 bit double(float) to float</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nb">parseFloat</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//check Null</span>
+      <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readDoubleLE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span> <span class="nx">val</span> <span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-16">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-16">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseGuid" /></p>
+
+<h2>function parseGuid</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert uniqueidentifier to string</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseGuid</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">+</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">intToHexStr</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">readInt32LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">),</span> <span class="mh">0xffffffff</span><span class="p">);</span>
+        <span class="nx">offset</span> <span class="o">+=</span> <span class="mi">4</span><span class="p">;</span>
+        <span class="nx">val</span> <span class="o">+=</span><span class="s1">&#39;-&#39;</span><span class="o">+</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">intToHexStr</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">readInt16LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">),</span> <span class="mh">0xffff</span><span class="p">);</span>
+        <span class="nx">offset</span> <span class="o">+=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="nx">val</span> <span class="o">+=</span><span class="s1">&#39;-&#39;</span><span class="o">+</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">intToHexStr</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">readInt16LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">),</span> <span class="mh">0xffff</span><span class="p">)</span>
+        <span class="nx">offset</span> <span class="o">+=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="nx">val</span> <span class="o">+=</span><span class="s1">&#39;-&#39;</span>
+        <span class="nx">val</span> <span class="o">+=</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">intToHexStr</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;hex&#39;</span><span class="p">,</span><span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="mh">0xff</span><span class="p">);</span>
+        <span class="nx">val</span> <span class="o">+=</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">intToHexStr</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;hex&#39;</span><span class="p">,</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="mh">0xff</span><span class="p">);</span>
+        <span class="nx">val</span> <span class="o">+=</span><span class="s1">&#39;-&#39;</span>
+        <span class="nx">val</span> <span class="o">+=</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">intToHexStr</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;hex&#39;</span><span class="p">,</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="mh">0xff</span><span class="p">);</span>
+        <span class="nx">val</span> <span class="o">+=</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">intToHexStr</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;hex&#39;</span><span class="p">,</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="mh">0xff</span><span class="p">);</span>
+        <span class="nx">val</span> <span class="o">+=</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">intToHexStr</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;hex&#39;</span><span class="p">,</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="mh">0xff</span><span class="p">);</span>
+        <span class="nx">val</span> <span class="o">+=</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">intToHexStr</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;hex&#39;</span><span class="p">,</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="mh">0xff</span><span class="p">);</span>
+        <span class="nx">val</span> <span class="o">+=</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">intToHexStr</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;hex&#39;</span><span class="p">,</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="mh">0xff</span><span class="p">);</span>
+        <span class="nx">val</span> <span class="o">+=</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">intToHexStr</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;hex&#39;</span><span class="p">,</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="mh">0xff</span><span class="p">);</span>
+        <span class="nx">offset</span><span class="o">++</span><span class="p">;</span>
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseBigInt" /></p>
+
+<h2>function parseBigInt</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert bigint to string</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseBigInt</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kd">var</span> <span class="nx">buffer</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">bigIntBufferToString</span><span class="p">(</span><span class="nx">buffer</span><span class="p">),</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-18">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseNint" /></p>
+
+<h2>function parseNint</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>int</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert variable length int to integer/string</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseNint</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="k">switch</span> <span class="p">(</span><span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">case</span> <span class="mi">0</span><span class="o">:</span>
+        <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNull</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+        <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseTinyInt</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
+        <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseSmallInt</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      <span class="k">case</span> <span class="mi">4</span><span class="o">:</span>
+        <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      <span class="k">case</span> <span class="mi">8</span><span class="o">:</span>
+        <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseBigInt</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+
+    <span class="p">}</span>
+
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-19">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseNbit" /></p>
+
+<h2>function parseNbit</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert variable length bit to integer
+(only length=1 is allowed)</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseNbit</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">n</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+
+    <span class="k">switch</span> <span class="p">(</span><span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+        <span class="nx">n</span> <span class="o">=</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseBit</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">n</span><span class="p">.</span><span class="nx">value</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-20">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-20">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseNnumeric" /></p>
+
+<h2>function parseNnumeric</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>float</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert variable length numeric to string</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseNnumeric</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">,</span> <span class="nx">precision</span><span class="p">,</span> <span class="nx">scale</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kd">var</span> <span class="nx">sign</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt8</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="nx">sign</span> <span class="o">=</span> <span class="p">(</span><span class="nx">sign</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">?</span> <span class="s1">&#39;-&#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+
+    <span class="kd">var</span> <span class="nx">n</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">offset</span><span class="o">:</span> <span class="kc">null</span><span class="p">};</span>
+
+    <span class="c1">//NULL value</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">len</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">switch</span> <span class="p">(</span><span class="nx">len</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+          <span class="nx">n</span> <span class="o">=</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseTinyInt</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+
+        <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
+          <span class="nx">n</span> <span class="o">=</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseSmallInt</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+
+        <span class="k">case</span> <span class="mi">4</span><span class="o">:</span>
+          <span class="nx">n</span> <span class="o">=</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+
+        <span class="k">case</span> <span class="mi">16</span><span class="o">:</span>
+        <span class="k">case</span> <span class="mi">12</span><span class="o">:</span>
+        <span class="k">case</span> <span class="mi">8</span><span class="o">:</span>
+          <span class="nx">n</span> <span class="o">=</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseBigInt</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nx">len</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+
+      <span class="p">}</span>
+
+      <span class="nx">n</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="nx">n</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">toString</span><span class="p">();</span>
+
+      <span class="kd">var</span> <span class="nx">v</span> <span class="o">=</span> <span class="nx">n</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nx">n</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="nx">scale</span><span class="p">);</span>
+      <span class="kd">var</span> <span class="nx">k</span> <span class="o">=</span> <span class="nx">n</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span> <span class="nx">n</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="nx">scale</span><span class="p">,</span> <span class="nx">n</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+
+      <span class="k">if</span> <span class="p">(</span><span class="nx">k</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">n</span><span class="p">.</span><span class="nx">value</span>  <span class="o">=</span> <span class="nx">v</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="nx">k</span><span class="p">;</span>
+      <span class="p">}</span>
+
+      <span class="nx">n</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="nx">sign</span><span class="o">+</span><span class="nx">n</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">n</span><span class="p">.</span><span class="nx">value</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-21">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-21">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseNfloat" /></p>
+
+<h2>function parseNfloat</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li>_float value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert variable length float to float</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseNfloat</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="k">switch</span> <span class="p">(</span><span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">case</span> <span class="mi">0</span><span class="o">:</span>
+        <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNull</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="mi">4</span><span class="o">:</span>
+        <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseReal</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">;</span>
+      <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="mi">8</span><span class="o">:</span>
+        <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nb">parseFloat</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-22">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-22">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseNmoney" /></p>
+
+<h2>function parseNmoney</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li>_float value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert variable length money to float</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseNmoney</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="k">switch</span> <span class="p">(</span><span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">case</span> <span class="mi">0</span><span class="o">:</span>
+        <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNull</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="mi">4</span><span class="o">:</span>
+        <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseSmallMoney</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="mi">8</span><span class="o">:</span>
+        <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseMoney</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-23">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-23">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseNdatetime" /></p>
+
+<h2>function parseNdatetime</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>Date</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert variable length datetime to Date</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseNdatetime</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="k">switch</span> <span class="p">(</span><span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">case</span> <span class="mi">0</span><span class="o">:</span>
+        <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNull</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="mi">4</span><span class="o">:</span>
+        <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseSmallDateTime</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="mi">8</span><span class="o">:</span>
+        <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseDatetime</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-24">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-24">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseChar" /></p>
+
+<h2>function parseChar</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert char to string</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseChar</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span><span class="p">);</span>
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-25">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-25">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseBinary" /></p>
+
+<h2>function parseBinary</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert a binary buffer to a hex-string
+(legacy support)</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseBinary</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="s1">&#39;0x&#39;</span><span class="o">+</span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;hex&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span><span class="p">);</span>
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">len</span> <span class="p">}</span> <span class="p">);</span>
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-26">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-26">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseVarBinary" /></p>
+
+<h2>function parseVarBinary</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert a binary buffer to a hex-string
+(legacy support)</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseVarBinary</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseBinary</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-27">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-27">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseNchar" /></p>
+
+<h2>function parseNchar</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert variable length char to string
+(legacy support)</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseNchar</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNvarchar</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">);</span>
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-28">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-28">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseText" /></p>
+
+<h2>function parseText</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert utf8 coded text to string
+additional field timestamp will be ignored</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseText</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//check Null</span>
+      <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+      <span class="nx">offset</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+
+      <span class="kd">var</span> <span class="nx">textPtrLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt8</span><span class="p">(</span><span class="o">--</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+      <span class="nx">offset</span><span class="o">++</span><span class="p">;</span>
+
+      <span class="kd">var</span> <span class="nx">textPtr</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">textPtrLen</span><span class="p">);</span>
+      <span class="nx">offset</span> <span class="o">+=</span> <span class="nx">textPtrLen</span><span class="p">;</span>
+
+      <span class="kd">var</span> <span class="nx">timestamp</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">8</span><span class="p">);</span>
+      <span class="nx">offset</span> <span class="o">+=</span> <span class="mi">8</span><span class="p">;</span>
+
+      <span class="kd">var</span> <span class="nx">textLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt32LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+      <span class="nx">offset</span> <span class="o">+=</span> <span class="mi">4</span><span class="p">;</span>
+      
+      <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">textLen</span><span class="p">);</span>
+      <span class="nx">offset</span> <span class="o">+=</span> <span class="nx">textLen</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span> <span class="p">}</span> <span class="p">);</span>
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-29">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-29">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseNtext" /></p>
+
+<h2>function parseNtext</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert variable length ucs2 coded text to string
+additional field timestamp will be ignored</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseNtext</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//check Null</span>
+      <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+      <span class="nx">offset</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+
+      <span class="kd">var</span> <span class="nx">textPtrLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt8</span><span class="p">(</span><span class="o">--</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+      <span class="nx">offset</span><span class="o">++</span><span class="p">;</span>
+
+      <span class="kd">var</span> <span class="nx">textPtr</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">textPtrLen</span><span class="p">);</span>
+      <span class="nx">offset</span> <span class="o">+=</span> <span class="nx">textPtrLen</span><span class="p">;</span>
+      <span class="kd">var</span> <span class="nx">timestamp</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">8</span><span class="p">);</span>
+      <span class="nx">offset</span> <span class="o">+=</span> <span class="mi">8</span><span class="p">;</span>
+      <span class="kd">var</span> <span class="nx">textLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt32LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+      <span class="nx">offset</span> <span class="o">+=</span> <span class="mi">4</span><span class="p">;</span>
+      <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;ucs2&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">textLen</span><span class="p">);</span>
+      <span class="nx">offset</span> <span class="o">+=</span> <span class="nx">textLen</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span> <span class="p">}</span> <span class="p">);</span>
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-30">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-30">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseImage" /></p>
+
+<h2>function parseImage</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>convert image to hex-string
+additional field timestamp will be ignored</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseImage</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//check Null</span>
+      <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+
+      <span class="kd">var</span> <span class="nx">textPtrLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt8</span><span class="p">(</span><span class="o">--</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+      <span class="nx">offset</span><span class="o">++</span><span class="p">;</span>
+
+      <span class="kd">var</span> <span class="nx">textPtr</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">textPtrLen</span><span class="p">);</span>
+      <span class="nx">offset</span> <span class="o">+=</span> <span class="nx">textPtrLen</span><span class="p">;</span>
+
+      <span class="kd">var</span> <span class="nx">timestamp</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="mi">8</span><span class="p">);</span>
+      <span class="nx">offset</span> <span class="o">+=</span> <span class="mi">8</span><span class="p">;</span> <span class="c1">//timestamp has constant length</span>
+
+      <span class="kd">var</span> <span class="nx">textLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt32LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+      <span class="nx">offset</span> <span class="o">+=</span> <span class="mi">4</span><span class="p">;</span>
+
+      <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="s1">&#39;0x&#39;</span><span class="o">+</span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;hex&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">textLen</span><span class="p">);</span>
+      <span class="nx">offset</span> <span class="o">+=</span> <span class="nx">textLen</span><span class="p">;</span>
+
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="nx">val</span><span class="p">,</span>
+              <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span> <span class="p">}</span> <span class="p">);</span>
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-31">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-31">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseInfo" /></p>
+
+<h2>function parseInfo</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li>
+<li><em>object</em> error
+<ul><li><em>int</em> sqlErrNo</li>
+<li><em>string</em> message</li></ul></li></ul></li>
+</ul>
+
+<p>convert a info/error message to error number and message</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseInfo</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kd">var</span> <span class="nx">sqlErrNo</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt32LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="nx">offset</span><span class="o">+=</span><span class="mi">4</span><span class="p">;</span>
+    <span class="nx">offset</span><span class="o">++</span><span class="p">;</span> <span class="c1">//state</span>
+    <span class="nx">offset</span><span class="o">++</span><span class="p">;</span> <span class="c1">//security level</span>
+    <span class="kd">var</span> <span class="nx">messageLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="p">;</span>
+    <span class="nx">offset</span> <span class="o">+=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;ucs2&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">messageLen</span><span class="p">);</span>
+    <span class="nx">offset</span><span class="o">+=</span><span class="nx">messageLen</span><span class="p">;</span>
+
+    <span class="nx">messageLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt8</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="p">;</span>
+    <span class="nx">offset</span><span class="o">++</span><span class="p">;</span>
+
+    <span class="nx">message</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span><span class="o">+</span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;ucs2&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">messageLen</span><span class="p">);</span>
+    <span class="nx">offset</span><span class="o">+=</span><span class="nx">messageLen</span><span class="p">;</span>
+
+    <span class="nx">messageLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt8</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="p">;</span>
+    <span class="nx">offset</span><span class="o">++</span><span class="p">;</span>
+
+    <span class="nx">message</span> <span class="o">+=</span> <span class="s1">&#39;.&#39;</span><span class="o">+</span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;ucs2&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">messageLen</span><span class="p">);</span>
+    <span class="nx">offset</span><span class="o">+=</span><span class="nx">messageLen</span><span class="p">;</span>
+
+    <span class="kd">var</span> <span class="nx">zeile</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="nx">offset</span> <span class="o">+=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="nx">message</span> <span class="o">+=</span> <span class="s1">&#39; row:&#39;</span><span class="o">+</span> <span class="nx">zeile</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="kc">null</span><span class="p">,</span>
+              <span class="nx">newOffset</span><span class="o">:</span> <span class="nx">offset</span><span class="p">,</span>
+              <span class="nx">error</span><span class="o">:</span> <span class="p">{</span><span class="nx">sqlErrNo</span><span class="o">:</span> <span class="nx">sqlErrNo</span><span class="p">,</span> <span class="nx">message</span><span class="o">:</span> <span class="nx">message</span><span class="p">}</span> <span class="p">}</span> <span class="p">);</span>
+  <span class="p">},</span>
+
+
+</pre></div>             </td>           </tr>                               <tr id="section-32">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-32">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseType" /></p>
+
+<h2>function parseType</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>type <em>int</em></li>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>precision <em>int</em></li>
+<li>scale <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>wrapper for all parse methods.
+Calls the parse methods via the tp array.</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">parseType</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">type</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">precision</span><span class="p">,</span> <span class="nx">scale</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kd">var</span> <span class="nx">len</span> <span class="o">=</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="nx">type</span><span class="p">].</span><span class="nx">len</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">vLen</span> <span class="o">=</span> <span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="nx">type</span><span class="p">].</span><span class="nx">vLen</span><span class="p">;</span>
+
+    <span class="c1">//types with variable length</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">vLen</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">len</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt8</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span><span class="kc">false</span><span class="p">);</span>
+      <span class="p">}</span>
+      <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">len</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+      <span class="p">}</span>
+
+      <span class="nx">offset</span> <span class="o">+=</span> <span class="nx">vLen</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">//NULL-Value</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">len</span> <span class="o">==</span> <span class="mh">0xffff</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="p">({</span> <span class="nx">value</span><span class="o">:</span><span class="kc">null</span><span class="p">,</span>
+                <span class="nx">newOffset</span> <span class="o">:</span> <span class="nx">offset</span> <span class="p">}</span> <span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">precision</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">//numeric types need precision and scale</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="nx">type</span><span class="p">].</span><span class="nx">parse</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">,</span> <span class="nx">precision</span><span class="p">,</span> <span class="nx">scale</span><span class="p">));</span>
+      <span class="p">}</span>
+      <span class="k">else</span>
+      <span class="p">{</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="nx">type</span><span class="p">].</span><span class="nx">parse</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">len</span><span class="p">));</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-33">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-33">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="intToHexStr" /></p>
+
+<h2>function intToHexStr</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>number <em>int</em></li>
+<li>maxVal <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li>_string</li>
+</ul>
+
+<p>helper method, convert an integer to a hex-string</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">intToHexStr</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">number</span><span class="p">,</span> <span class="nx">maxVal</span><span class="p">)</span>
+  <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">fStr</span> <span class="o">=</span> <span class="p">(</span><span class="nx">maxVal</span> <span class="o">+</span> <span class="mi">1</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="mi">16</span><span class="p">);</span>
+
+      <span class="k">if</span> <span class="p">(</span><span class="nx">number</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+      <span class="p">{</span>
+          <span class="nx">number</span> <span class="o">=</span> <span class="nx">maxVal</span> <span class="o">+</span> <span class="nx">number</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+      <span class="p">}</span>
+
+
+      <span class="k">return</span> <span class="p">(</span><span class="nx">fStr</span><span class="o">+</span><span class="p">(</span><span class="nx">number</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="mi">16</span><span class="p">))).</span><span class="nx">substr</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="nx">fStr</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mi">1</span><span class="p">)).</span><span class="nx">toUpperCase</span><span class="p">();</span>
+  <span class="p">},</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-34">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-34">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="bigIntBufferToString" /></p>
+
+<h2>function bigIntBufferToString</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em>
+<ul><li><em>string</em> value</li>
+<li><em>int</em> newOffset</li></ul></li>
+</ul>
+
+<p>helper method, converts a bigint buffer to a string</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+<span class="nx">bigIntBufferToString</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">buffer</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">arr</span><span class="p">,</span> <span class="nx">invert</span><span class="p">,</span> <span class="nx">isZero</span><span class="p">,</span> <span class="nx">nextRemainder</span><span class="p">,</span> <span class="nx">result</span><span class="p">,</span> <span class="nx">sign</span><span class="p">,</span> <span class="nx">t</span><span class="p">;</span>
+    <span class="nx">arr</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">buffer</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">buffer</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+    <span class="nx">isZero</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">array</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="kr">byte</span><span class="p">,</span> <span class="nx">_i</span><span class="p">,</span> <span class="nx">_len</span><span class="p">;</span>
+      <span class="k">for</span> <span class="p">(</span><span class="nx">_i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">_len</span> <span class="o">=</span> <span class="nx">array</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">_i</span> <span class="o">&lt;</span> <span class="nx">_len</span><span class="p">;</span> <span class="nx">_i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kr">byte</span> <span class="o">=</span> <span class="nx">array</span><span class="p">[</span><span class="nx">_i</span><span class="p">];</span>
+        <span class="k">if</span> <span class="p">(</span><span class="kr">byte</span> <span class="o">!==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+      <span class="p">}</span>
+      <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">};</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">isZero</span><span class="p">(</span><span class="nx">arr</span><span class="p">))</span> <span class="k">return</span> <span class="s1">&#39;0&#39;</span><span class="p">;</span>
+    <span class="nx">nextRemainder</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">array</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">index</span><span class="p">,</span> <span class="nx">remainder</span><span class="p">,</span> <span class="nx">s</span><span class="p">,</span> <span class="nx">_ref</span><span class="p">;</span>
+      <span class="nx">remainder</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+      <span class="k">for</span> <span class="p">(</span><span class="nx">index</span> <span class="o">=</span> <span class="nx">_ref</span> <span class="o">=</span> <span class="nx">array</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">index</span> <span class="o">+=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">s</span> <span class="o">=</span> <span class="p">(</span><span class="nx">remainder</span> <span class="o">*</span> <span class="mi">256</span><span class="p">)</span> <span class="o">+</span> <span class="nx">array</span><span class="p">[</span><span class="nx">index</span><span class="p">];</span>
+        <span class="nx">array</span><span class="p">[</span><span class="nx">index</span><span class="p">]</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">s</span> <span class="o">/</span> <span class="mi">10</span><span class="p">);</span>
+        <span class="nx">remainder</span> <span class="o">=</span> <span class="nx">s</span> <span class="o">%</span> <span class="mi">10</span><span class="p">;</span>
+      <span class="p">}</span>
+      <span class="k">return</span> <span class="nx">remainder</span><span class="p">;</span>
+    <span class="p">};</span>
+    <span class="nx">invert</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">array</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="kr">byte</span><span class="p">,</span> <span class="nx">index</span><span class="p">,</span> <span class="nx">_len</span><span class="p">,</span> <span class="nx">_len2</span><span class="p">,</span> <span class="nx">_results</span><span class="p">;</span>
+      <span class="k">for</span> <span class="p">(</span><span class="nx">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">_len</span> <span class="o">=</span> <span class="nx">array</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">index</span> <span class="o">&lt;</span> <span class="nx">_len</span><span class="p">;</span> <span class="nx">index</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kr">byte</span> <span class="o">=</span> <span class="nx">array</span><span class="p">[</span><span class="nx">index</span><span class="p">];</span>
+        <span class="nx">array</span><span class="p">[</span><span class="nx">index</span><span class="p">]</span> <span class="o">=</span> <span class="nx">array</span><span class="p">[</span><span class="nx">index</span><span class="p">]</span> <span class="o">^</span> <span class="mh">0xFF</span><span class="p">;</span>
+      <span class="p">}</span>
+      <span class="nx">_results</span> <span class="o">=</span> <span class="p">[];</span>
+      <span class="k">for</span> <span class="p">(</span><span class="nx">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">_len2</span> <span class="o">=</span> <span class="nx">array</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">index</span> <span class="o">&lt;</span> <span class="nx">_len2</span><span class="p">;</span> <span class="nx">index</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kr">byte</span> <span class="o">=</span> <span class="nx">array</span><span class="p">[</span><span class="nx">index</span><span class="p">];</span>
+        <span class="nx">array</span><span class="p">[</span><span class="nx">index</span><span class="p">]</span> <span class="o">=</span> <span class="nx">array</span><span class="p">[</span><span class="nx">index</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="nx">index</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">255</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">_results</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="nx">index</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+          <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+      <span class="k">return</span> <span class="nx">_results</span><span class="p">;</span>
+    <span class="p">};</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">arr</span><span class="p">[</span><span class="nx">arr</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mh">0x80</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">sign</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span><span class="p">;</span>
+      <span class="nx">invert</span><span class="p">(</span><span class="nx">arr</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">sign</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="nx">result</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="nx">isZero</span><span class="p">(</span><span class="nx">arr</span><span class="p">))</span> <span class="p">{</span>
+      <span class="nx">t</span> <span class="o">=</span> <span class="nx">nextRemainder</span><span class="p">(</span><span class="nx">arr</span><span class="p">);</span>
+      <span class="nx">result</span> <span class="o">=</span> <span class="nx">t</span> <span class="o">+</span> <span class="nx">result</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">sign</span> <span class="o">+</span> <span class="nx">result</span><span class="p">;</span>
+  <span class="p">},</span>
+
+
+
+  <span class="nx">tp</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Array</span><span class="p">()</span>
+
+<span class="p">}</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-35">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-35">&#182;</a>               </div>               <p>Configuration of the fixed length data types </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+<span class="cm">/* Fixed-Length Data Types</span>
+
+<span class="cm">NULLTYPE = %x1F ; Null (no data associated with this type)</span>
+<span class="cm">INT1TYPE = %x30 ; TinyInt (1 byte data representation)</span>
+<span class="cm">BITTYPE = %x32 ; Bit (1 byte data representation)</span>
+<span class="cm">INT2TYPE = %x34 ; SmallInt (2 byte data representation)</span>
+<span class="cm">INT4TYPE = %x38 ; Int (4 byte data representation)</span>
+<span class="cm">DATETIM4TYPE = %x3A ; SmallDateTime (4 byte data representation)</span>
+<span class="cm">FLT4TYPE = %x3B ; Real (4 byte data representation)</span>
+<span class="cm">MONEYTYPE = %x3C ; Money (8 byte data representation)</span>
+<span class="cm">DATETIMETYPE = %x3D ; DateTime (8 byte data representation)</span>
+<span class="cm">FLT8TYPE = %x3E ; Float (8 byte data representation)</span>
+<span class="cm">*/</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x1f</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNull</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">0</span><span class="p">};</span>  <span class="c1">//nulltype</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x30</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseTinyInt</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">0</span><span class="p">};</span>  <span class="c1">//tinyint</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x32</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseBit</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">0</span><span class="p">};</span>  <span class="c1">//bit</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x34</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseSmallInt</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">0</span><span class="p">};</span>  <span class="c1">//smallint</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x38</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nb">parseInt</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">4</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">0</span><span class="p">};</span>  <span class="c1">//int</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x3a</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseSmallDateTime</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">4</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">0</span><span class="p">};</span>  <span class="c1">//smalldatetime</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x3b</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseReal</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">4</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">0</span><span class="p">};</span>  <span class="c1">//real</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x3c</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseMoney</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">8</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">0</span><span class="p">};</span>  <span class="c1">//money</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x3d</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseDatetime</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">8</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">0</span><span class="p">};</span> <span class="c1">//datetime 8Byte]</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x3e</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nb">parseFloat</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">8</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">0</span><span class="p">};</span>  <span class="c1">//float</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x7a</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseSmallMoney</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">4</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">0</span><span class="p">};</span>  <span class="c1">//smallMoney</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-36">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-36">&#182;</a>               </div>               <p>Configuration of the variable length data types </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+<span class="cm">/* Variable-Length Data Types</span>
+
+<span class="cm">GUIDTYPE = %x24 ; UniqueIdentifier</span>
+<span class="cm">INTNTYPE = %x26 ; (see below)</span>
+<span class="cm">DECIMALTYPE = %x37 ; Decimal (legacy support)</span>
+<span class="cm">NUMERICTYPE = %x3F ; Numeric (legacy support)</span>
+<span class="cm">BITNTYPE = %x68 ; (see below)</span>
+<span class="cm">DECIMALNTYPE = %x6A ; Decimal</span>
+<span class="cm">NUMERICNTYPE = %x6C ; Numeric</span>
+<span class="cm">FLTNTYPE = %x6D ; (see below)</span>
+<span class="cm">MONEYNTYPE = %x6E ; (see below)</span>
+<span class="cm">DATETIMNTYPE = %x6F ; (see below)</span>
+<span class="cm">--DATENTYPE = %x28 ; (introduced in TDS 7.3)</span>
+<span class="cm">--TIMENTYPE = %x29 ; (introduced in TDS 7.3)</span>
+<span class="cm">--DATETIME2NTYPE = %x2A ; (introduced in TDS 7.3)</span>
+<span class="cm">--DATETIMEOFFSETNTYPE = %x2B ; (introduced in TDS 7.3)</span>
+<span class="cm">CHARTYPE = %x2F ; Char (legacy support)</span>
+<span class="cm">VARCHARTYPE = %x27 ; VarChar (legacy support)</span>
+<span class="cm">BINARYTYPE = %x2D ; Binary (legacy support)</span>
+<span class="cm">VARBINARYTYPE = %x25 ; VarBinary (legacy support)</span>
+<span class="cm">BIGVARBINTYPE = %xA5 ; VarBinary</span>
+<span class="cm">BIGVARCHRTYPE = %xA7 ; VarChar</span>
+<span class="cm">BIGBINARYTYPE = %xAD ; Binary</span>
+<span class="cm">BIGCHARTYPE = %xAF ; Char</span>
+<span class="cm">NVARCHARTYPE = %xE7 ; NVarChar</span>
+<span class="cm">NCHARTYPE = %xEF ; NChar</span>
+<span class="cm">--XMLTYPE = %xF1 ; XML (introduced in TDS 7.2)</span>
+<span class="cm">--UDTTYPE = %xF0 ; CLR-UDT (introduced in TDS 7.2)</span>
+<span class="cm">TEXTTYPE = %x23 ; Text</span>
+<span class="cm">IMAGETYPE = %x22 ; Image</span>
+<span class="cm">NTEXTTYPE = %x63 ; NText</span>
+<span class="cm">--SSVARIANTTYPE = %x62 ; Sql_Variant (introduced in TDS 7.2)</span>
+<span class="cm">*/</span>
+
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x24</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseGuid</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">1</span><span class="p">};</span>  <span class="c1">//GUID</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x26</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNint</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">1</span><span class="p">};</span>  <span class="c1">//Nint</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x37</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNdecimal</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">1</span><span class="p">};</span>  <span class="c1">//decimal</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x3f</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNnumeric</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">1</span><span class="p">};</span>  <span class="c1">//numeric</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x68</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNbit</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">1</span><span class="p">};</span>  <span class="c1">//Nbit</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x6a</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNnumeric</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">1</span><span class="p">};</span>  <span class="c1">//Ndecimal</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x6c</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNnumeric</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">1</span><span class="p">};</span>  <span class="c1">//Nnumeric</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x6d</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNfloat</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">1</span><span class="p">};</span>  <span class="c1">//Nfloat</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x6e</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNmoney</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">1</span><span class="p">};</span>  <span class="c1">//Nmoney</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x6f</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNdatetime</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">1</span><span class="p">};</span>  <span class="c1">//Ndatetime</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x2f</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseChar</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">7</span><span class="p">};</span>  <span class="c1">//char </span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x27</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseVarchar</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">7</span><span class="p">};</span>  <span class="c1">//varchar </span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x2d</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseBinary</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">2</span><span class="p">};</span>  <span class="c1">//binary </span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x25</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseVarBinary</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">2</span><span class="p">};</span>  <span class="c1">//varbinary </span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0xa5</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseVarBinary</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">2</span><span class="p">};</span>  <span class="c1">//</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0xa7</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseVarchar</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">7</span><span class="p">};</span>  <span class="c1">//varchar</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0xad</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseBinary</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">2</span><span class="p">};</span>  <span class="c1">//binary</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0xaf</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseChar</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">7</span><span class="p">};</span>  <span class="c1">//char</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0xe7</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNvarchar</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">7</span><span class="p">};</span>  <span class="c1">//nvarchar</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0xef</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNchar</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">7</span><span class="p">};</span>  <span class="c1">//nchar</span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x23</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseText</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">11</span><span class="p">};</span>  <span class="c1">//text </span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x22</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseImage</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">6</span><span class="p">};</span>  <span class="c1">//image </span>
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0x63</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseNtext</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">11</span><span class="p">};</span>  <span class="c1">//ntext </span>
+
+<span class="nx">typeParser</span><span class="p">.</span><span class="nx">tp</span><span class="p">[</span><span class="mh">0xab</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">parse</span><span class="o">:</span><span class="nx">typeParser</span><span class="p">.</span><span class="nx">parseInfo</span><span class="p">,</span> <span class="nx">len</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span><span class="nx">vLen</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">metaLen</span><span class="o">:</span><span class="mi">1</span><span class="p">};</span>  <span class="c1">//ntext </span>
+
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">typeParser</span><span class="p">;</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

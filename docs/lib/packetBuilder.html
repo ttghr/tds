@@ -1,0 +1,568 @@
+<!DOCTYPE html>  <html> <head>   <title>packetBuilder.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="../docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="connection.html">                 connection.js               </a>                                           <a class="source" href="defaults.html">                 defaults.js               </a>                                           <a class="source" href="packetBuilder.html">                 packetBuilder.js               </a>                                           <a class="source" href="responseParser.html">                 responseParser.js               </a>                                           <a class="source" href="rowParser.html">                 rowParser.js               </a>                                           <a class="source" href="tds.html">                 tds.js               </a>                                           <a class="source" href="typeParser.html">                 typeParser.js               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">       <ul>        <li>         <a href="../chart/tds_chart.html">tds modul structure (overview)</a>        </li>       </ul>             <h1>               packetBuilder.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <h3>Author: <span> H.Ristau</span><a id="top"></a></h3>
+
+<p>builds tds packets.</p>
+
+<h4>requires:</h4>
+
+<ul>
+<li>util</li>
+<li>assert</li>
+</ul>
+
+<h3>functions:</h3>
+
+<ul>
+<li><a href="#addHeaderPacket">addHeaderPacket(messageType)</a></li>
+<li><a href="#addData">addData(data)</a></li>
+<li><a href="#addPacketData">addPacketData(data, endian, encoding,typ)</a></li>
+<li><a href="#splitPacket">splitPacket(b)</a></li>
+</ul>
+
+<h3>public:</h3>
+
+<ul>
+<li><a href="#LoginRequest">LoginRequest (username, password, database)</a></li>
+<li><a href="#ExecuteQuery">ExecuteQuery (query)</a></li>
+</ul>             </td>             <td class="code">               <div class="highlight"><pre><span class="kd">var</span> <span class="nx">util</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;util&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">assert</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;assert&quot;</span><span class="p">);</span>
+
+
+</pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="packetBuilder" /></p>
+
+<h2>function packetBuilder</h2>
+
+<p>initialisation of the packet header and the packet data</p>             </td>             <td class="code">               <div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">packetBuilder</span><span class="p">()</span> <span class="p">{</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">offset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="mh">0xFFFF</span><span class="p">);</span>
+
+
+    <span class="c1">// packet type: init</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">writeUInt8</span><span class="p">(</span><span class="mh">0x00</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="c1">// packet status: &#39;normal&#39;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">writeUInt8</span><span class="p">(</span><span class="mh">0x01</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="c1">// packet length</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">writeUInt16LE</span><span class="p">(</span><span class="mh">0x00</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span> <span class="o">+=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="c1">// packet spid is the process id on the server side. we don&#39;t care.</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">writeUInt16LE</span><span class="p">(</span><span class="mh">0x00</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span> <span class="o">+=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="c1">// packet id: only one here.</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">writeUInt8</span><span class="p">(</span><span class="mh">0x01</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="c1">// window id: just the one, again.</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">writeUInt8</span><span class="p">(</span><span class="mh">0x00</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>packetData[] store the data of the packet </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="k">this</span><span class="p">.</span><span class="nx">packetData</span> <span class="o">=</span> <span class="p">[];</span>
+<span class="p">}</span>
+
+
+</pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="addHeaderPacket" /></p>
+
+<h2>function packetBuilder.addHeaderPacket</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>messageType <em>int</em></li>
+</ul>
+
+<p>sets messageType of the packet header</p>             </td>             <td class="code">               <div class="highlight"><pre>
+<span class="nx">packetBuilder</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">addHeaderPacket</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">messageType</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">arguments</span><span class="p">.</span><span class="nx">length</span> <span class="o">===</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">messageType</span><span class="p">;</span>
+      <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;The &#39;messageType&#39; argument is missing!&quot;</span><span class="p">);</span>
+
+<span class="p">};</span>
+
+
+
+
+</pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="addData" /></p>
+
+<h2>function packetBuilder.addData</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+</ul>
+
+<p>adds rawdata to the packet byte by byte</p>             </td>             <td class="code">               <div class="highlight"><pre>
+<span class="nx">packetBuilder</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">addData</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">arguments</span><span class="p">.</span><span class="nx">length</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;The &#39;data&#39; argument is missing!&quot;</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">data</span> <span class="o">||</span> <span class="k">typeof</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="o">!==</span> <span class="s2">&quot;object&quot;</span><span class="p">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;The &#39;data&#39; argument is not a Buffer!&quot;</span><span class="p">);</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">writeUInt8</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="addPacketData" /></p>
+
+<h2>function packetBuilder.addPacketData</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>endian <em>string</em> ('little' || 'big')</li>
+<li>encoding <em>string</em> ('ucs2' || 'utf8')</li>
+<li>typ <em>string</em> ('s' || 'd' || 'p')</li>
+</ul>
+
+<p>adds an item to packetData[]</p>             </td>             <td class="code">               <div class="highlight"><pre>
+<span class="nx">packetBuilder</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">addPacketData</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">endian</span><span class="p">,</span> <span class="nx">encoding</span><span class="p">,</span><span class="nx">typ</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">ok</span><span class="p">(</span><span class="nx">arguments</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="s2">&quot;The arguments is wrong, 3 is needed but &quot;</span> <span class="o">+</span> <span class="nx">arguments</span><span class="p">.</span><span class="nx">length</span> <span class="o">+</span> <span class="s2">&quot; was found!&quot;</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">arguments</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="p">{</span>
+      <span class="nx">typ</span> <span class="o">=</span> <span class="s1">&#39;d&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">var</span> <span class="nx">packetDataItem</span> <span class="o">=</span> <span class="p">[</span><span class="nx">data</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">,</span> <span class="nx">endian</span><span class="p">,</span> <span class="nx">encoding</span><span class="p">,</span><span class="nx">typ</span><span class="p">];</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">typ</span> <span class="o">!=</span> <span class="s1">&#39;s&#39;</span><span class="p">)</span>
+    <span class="p">{</span>
+      <span class="cm">/* 0x00, 0x00 only fill space*/</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">writeUInt16LE</span><span class="p">(</span><span class="mh">0x00</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span> <span class="o">+=</span> <span class="mi">2</span><span class="p">;</span>
+      <span class="cm">/* 0x00, 0x00 only fills space*/</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">writeUInt16LE</span><span class="p">(</span><span class="mh">0x00</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span> <span class="o">+=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">packetData</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">packetDataItem</span><span class="p">);</span>
+<span class="p">};</span>
+
+
+</pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="toBuffer" /></p>
+
+<h2>function packetBuilder.toBuffer</h2>
+
+<h3>return</h3>
+
+<ul>
+<li><em>buffer</em></li>
+</ul>
+
+<p>convert packetData structure to a buffer</p>             </td>             <td class="code">               <div class="highlight"><pre>
+<span class="nx">packetBuilder</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">toBuffer</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">bufferOrArray</span><span class="p">,</span>
+        <span class="nx">offset</span><span class="p">,</span>
+        <span class="nx">endian</span><span class="p">,</span>
+        <span class="nx">encoding</span><span class="p">,</span>
+        <span class="nx">length</span><span class="p">,</span>
+        <span class="nx">typ</span><span class="p">;</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="k">in</span> <span class="k">this</span><span class="p">.</span><span class="nx">packetData</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">bufferOrArray</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">packetData</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">0</span><span class="p">];</span>
+        <span class="nx">offset</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">packetData</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">1</span><span class="p">];</span>
+        <span class="nx">endian</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">packetData</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">||</span> <span class="s1">&#39;big&#39;</span><span class="p">;</span>
+        <span class="nx">encoding</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">packetData</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span> <span class="o">||</span> <span class="s1">&#39;utf8&#39;</span><span class="p">;</span>
+        <span class="nx">typ</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">packetData</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span> <span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="p">(</span><span class="nx">bufferOrArray</span><span class="p">)</span> <span class="o">===</span> <span class="s2">&quot;string&quot;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">bufferOrArray</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="nx">bufferOrArray</span><span class="p">,</span> <span class="nx">encoding</span><span class="p">);</span>
+
+            </pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>password encrytion </p>             </td>             <td class="code">               <div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">typ</span> <span class="o">==</span> <span class="s1">&#39;p&#39;</span><span class="p">)</span> <span class="p">{</span>
+              <span class="k">for</span> <span class="p">(</span><span class="nx">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">j</span><span class="o">&lt;</span><span class="nx">bufferOrArray</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span>
+              <span class="p">{</span>
+                <span class="nx">bufferOrArray</span><span class="p">[</span><span class="nx">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="nx">bufferOrArray</span><span class="p">[</span><span class="nx">j</span><span class="p">]</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">4</span><span class="p">)</span> <span class="o">|</span> <span class="p">((</span><span class="nx">bufferOrArray</span><span class="p">[</span><span class="nx">j</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">)</span>  <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">))</span> <span class="o">^</span> <span class="mh">0xA5</span><span class="p">;</span>
+              <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="nx">length</span> <span class="o">=</span> <span class="nx">bufferOrArray</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">encoding</span> <span class="o">===</span> <span class="s2">&quot;ucs2&quot;</span><span class="p">)</span> <span class="p">{</span> <span class="nx">length</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">length</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span> <span class="cm">/* UNICODE characters has double length */</span> <span class="p">}</span>
+
+        </pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>Update position and length </p>             </td>             <td class="code">               <div class="highlight"><pre>
+        <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">writeUInt16LE</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">offset</span> <span class="o">-</span> <span class="mi">8</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">endian</span> <span class="o">===</span> <span class="s1">&#39;big&#39;</span><span class="p">);</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">writeUInt16LE</span><span class="p">(</span><span class="nx">length</span><span class="p">,</span> <span class="nx">offset</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">endian</span> <span class="o">===</span> <span class="s1">&#39;big&#39;</span><span class="p">);</span>
+
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">Buffer</span><span class="p">.</span><span class="nx">isBuffer</span><span class="p">(</span><span class="nx">bufferOrArray</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">bufferOrArray</span><span class="p">.</span><span class="nx">copy</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">);</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">offset</span> <span class="o">+=</span> <span class="nx">bufferOrArray</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="cm">/* Advance to TRULY length */</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="p">(</span><span class="nx">bufferOrArray</span><span class="p">)</span> <span class="o">===</span> <span class="s2">&quot;object&quot;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">j</span> <span class="k">in</span> <span class="nx">bufferOrArray</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">writeUInt8</span><span class="p">(</span><span class="nx">bufferOrArray</span><span class="p">[</span><span class="nx">j</span><span class="p">],</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">,</span> <span class="nx">endian</span> <span class="o">===</span> <span class="s1">&#39;big&#39;</span><span class="p">);</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">offset</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+
+
+    <span class="p">}</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>Copy current buffer to new small buffer </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="kd">var</span> <span class="nx">buf</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">copy</span><span class="p">(</span><span class="nx">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">);</span>
+    <span class="nx">buf</span><span class="p">.</span><span class="nx">writeUInt16BE</span><span class="p">(</span><span class="nx">buf</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="nx">buf</span><span class="p">;</span>
+
+<span class="p">};</span>
+
+
+<span class="cm">/*</span>
+<span class="cm">packetBuilder.HandshakeRequest = function(useMars) {</span>
+
+<span class="cm">        return new Buffer([</span>
+<span class="cm">        0x12, 0x01, 0x00, 0x2f, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x1a, 0x00, 0x06, 0x01, 0x00, 0x20, 0x00, 0x01, 0x02, 0x00, 0x21, 0x00, 0x01, 0x03, 0x00, 0x22, 0x00, 0x04, 0x04, 0x00, 0x26, 0x00, 0x01, 0xff, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xd4, 0x00</span>
+<span class="cm">       //[0x12, 0x01, 0x00, 0x2F, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x1A, 0x00, 0x06, 0x01, 0x00, 0x20, 0x00, 0x01, 0x02, 0x00, 0x21, 0x00, 0x01, 0x03, 0x00, 0x22, 0x00, 0x04, 0x04, 0x00, 0x26, 0x00, 0x01, 0xFF, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xB8, 0x0D, 0x00, 0x00, 0x01</span>
+<span class="cm">       ]);</span>
+
+<span class="cm">    var msg = new packetBuilder();</span>
+<span class="cm">    // 0x12 - Handshake</span>
+<span class="cm">    msg.addHeaderPacket(0x12);</span>
+<span class="cm">    // 2 - Version</span>
+<span class="cm">    msg.addData([0x00]);</span>
+<span class="cm">    msg.addPacketData([0x09, 0x00, 0x00, 0x00, 0x00, 0x00]);</span>
+<span class="cm">    // 1- ENCRYPTION  -&gt;  0-Off / 1-On / 2-NOT_SUP / 3-REQ</span>
+<span class="cm">    msg.addData([0x01]);</span>
+<span class="cm">    msg.addPacketData([0x00]);</span>
+<span class="cm">    // 2 - INSTOPT</span>
+<span class="cm">    msg.addData([0x02]);</span>
+<span class="cm">    msg.addPacketData([0x00]);</span>
+<span class="cm">    // 3 - THREADID</span>
+<span class="cm">    msg.addData([0x03]);</span>
+<span class="cm">    msg.addPacketData([0x00, 0x00, 0x00, 0x00]);</span>
+<span class="cm">    // 4 - MARS 0-Off / 1-On</span>
+<span class="cm">    msg.addData([0x04]);</span>
+<span class="cm">    msg.addPacketData([useMars || 0x01]);</span>
+
+<span class="cm">    msg.addData([0xFF]); // Terminator</span>
+
+<span class="cm">    var buf = msg.toBuffer();</span>
+<span class="cm">console.log(&#39;--- 1&#39;);</span>
+
+<span class="cm">    buf.writeUInt8(buf.length, 3, true);</span>
+
+<span class="cm">    //return new Buffer([0x12, 0x01, 0x00, 0x2F, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x1A, 0x00, 0x06, 0x01, 0x00, 0x20,0x00, 0x01, 0x02, 0x00, 0x21, 0x00, 0x01, 0x03, 0x00, 0x22, 0x00, 0x04, 0x04, 0x00, 0x26, 0x00,0x01, 0xFF, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xB8, 0x0D, 0x00, 0x00, 0x01]);</span>
+
+
+
+<span class="cm">    return buf;</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
+<span class="c1">/// &lt;summary&gt;</span>
+<span class="c1">///   This is the response that server sent, contains some information like your version</span>
+<span class="c1">/// &lt;/summary&gt;</span>
+<span class="c1">/// &lt;param name=&quot;buffer&quot; type=&quot;Buffer&quot; /&gt;</span>
+<span class="c1">/// &lt;returns type=&quot;Object&quot; /&gt;</span>
+<span class="cm">/*</span>
+<span class="cm">packetBuilder.HandshakeResponse = function(buffer) {</span>
+<span class="cm">    assert.ok(arguments.length === 1, &quot;The argument &#39;buffer&#39; is missing!&quot;);</span>
+<span class="cm">    assert.ok(buffer[0] === 0x04, &quot;This buffer is not Server Response or type bit not is 0x04!&quot;)</span>
+
+<span class="cm">    var offset = 0;</span>
+<span class="cm">    offset += 8; // Header Packet length</span>
+<span class="cm">    offset += 5; // VERSION Token=1 + Offset=2 + length=2</span>
+<span class="cm">    offset += 5; // ENCRYPTION Token=1 + Offset=2 + length=2</span>
+<span class="cm">    offset += 5; // INSTOPT Token=1 + Offset=2 + length=2</span>
+<span class="cm">    offset += 5; // THREADID Token=1 + Offset=2 + length=2</span>
+<span class="cm">    offset += 5; // MARS Token=1 + Offset=2 + length=2</span>
+<span class="cm">    offset += 1; // Terminator</span>
+
+<span class="cm">    var tmp = buffer.slice(offset);</span>
+
+<span class="cm">    return {</span>
+<span class="cm">        Version: {</span>
+<span class="cm">            Major: tmp.readUInt8(0, true),</span>
+<span class="cm">            Minor: tmp.readUInt8(1, true),</span>
+<span class="cm">            Revision: tmp.readUInt16LE(2, true) // 6-&gt;0x6, 64-&gt;0x40 = 0x640 = 1600</span>
+<span class="cm">        },</span>
+<span class="cm">        UseEncrypt: tmp.readUInt16LE(4, true)</span>
+<span class="cm">        //UseEncrypt: tmp.readUInt16LE(0, true)</span>
+<span class="cm">    };</span>
+<span class="cm">}</span>
+
+<span class="cm">/// &lt;summary&gt;</span>
+<span class="cm">///   This is the response that server sent, contains some information like your version</span>
+<span class="cm">/// &lt;/summary&gt;</span>
+<span class="cm">/// &lt;param name=&quot;username&quot; type=&quot;String&quot; /&gt;</span>
+<span class="cm">/// &lt;param name=&quot;password&quot; type=&quot;String&quot; /&gt;</span>
+<span class="cm">/// &lt;param name=&quot;database&quot; type=&quot;String&quot; /&gt;</span>
+<span class="cm">/// &lt;returns type=&quot;Buffer&quot; /&gt;</span>
+<span class="cm">*/</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="LoginRequest" /></p>
+
+<h2>function LoginRequest</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>username <em>string</em></li>
+<li>password <em>string</em></li>
+<li>database <em>string</em></li>
+</ul>
+
+<h3>return:</h3>
+
+<ul>
+<li><em>buffer</em></li>
+</ul>
+
+<p>builds a tds packet for a login request</p>             </td>             <td class="code">               <div class="highlight"><pre>
+<span class="nx">packetBuilder</span><span class="p">.</span><span class="nx">LoginRequest</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">username</span><span class="p">,</span> <span class="nx">password</span><span class="p">,</span> <span class="nx">database</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kd">var</span> <span class="nx">msg</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">packetBuilder</span><span class="p">();</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>0x10 = Handshake </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addHeaderPacket</span><span class="p">(</span><span class="mh">0x10</span><span class="p">);</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>placeholder for packet length </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addData</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]);</span> <span class="c1">// Length</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>SQL Server Version<br>
+Version Sent from Client to Server:</p>
+
+<ul>
+<li>7.0  -> 0x00000070</li>
+<li>2000 -> 0x00000071</li>
+<li>2005 -> 0x02000972</li>
+<li>2008 -> 0x03000A73</li>
+<li>2008 -> 0x03000B73</li>
+<li>SQL Server Denali -> 0x04000074</li>
+</ul>             </td>             <td class="code">               <div class="highlight"><pre>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-15">&#182;</a>               </div>               <p>2000 TDS version </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addData</span><span class="p">([</span><span class="mh">0x00</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x71</span><span class="p">]);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-16">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-16">&#182;</a>               </div>               <p>PacketSize 4096 Byte </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addData</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0x10</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p>Client Prog ver </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addData</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0x7</span><span class="p">]);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-18">&#182;</a>               </div>               <p>Client Process ID </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addData</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0x1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-19">&#182;</a>               </div>               <p>Connection ID </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addData</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]);</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-20">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-20">&#182;</a>               </div>               <p>Option Flag 1 </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addData</span><span class="p">([</span><span class="mh">0xE0</span><span class="p">]);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-21">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-21">&#182;</a>               </div>               <p>Option Flag 2 </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addData</span><span class="p">([</span><span class="mh">0x01</span><span class="p">]);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-22">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-22">&#182;</a>               </div>               <p>Type Flags </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addData</span><span class="p">([</span><span class="mi">0</span><span class="p">]);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-23">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-23">&#182;</a>               </div>               <p>Option Flag 3 </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addData</span><span class="p">([</span><span class="mi">0</span><span class="p">]);</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-24">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-24">&#182;</a>               </div>               <p>ClientTimZone 480 </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addData</span><span class="p">([</span><span class="mh">0xE0</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-25">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-25">&#182;</a>               </div>               <p>Client LCID 1033 </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addData</span><span class="p">([</span><span class="mh">0x09</span><span class="p">,</span> <span class="mh">0x04</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]);</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-26">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-26">&#182;</a>               </div>               <p>Hostname </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="kd">var</span> <span class="nx">hostname</span> <span class="o">=</span> <span class="nx">arguments</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">||</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;os&quot;</span><span class="p">).</span><span class="nx">hostname</span><span class="p">();</span>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addPacketData</span><span class="p">(</span><span class="nx">hostname</span><span class="p">,</span> <span class="nx">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">,</span> <span class="nx">encoding</span> <span class="o">=</span> <span class="s1">&#39;ucs2&#39;</span><span class="p">);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-27">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-27">&#182;</a>               </div>               <p>Username </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addPacketData</span><span class="p">(</span><span class="nx">username</span><span class="p">,</span> <span class="nx">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">,</span> <span class="nx">encoding</span> <span class="o">=</span> <span class="s1">&#39;ucs2&#39;</span><span class="p">);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-28">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-28">&#182;</a>               </div>               <p>Password </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addPacketData</span><span class="p">(</span><span class="nx">password</span><span class="p">,</span> <span class="nx">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">,</span> <span class="nx">encoding</span> <span class="o">=</span> <span class="s1">&#39;ucs2&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-29">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-29">&#182;</a>               </div>               <p>Appname </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="kd">var</span> <span class="nx">appName</span> <span class="o">=</span> <span class="nx">arguments</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">||</span> <span class="s2">&quot;node-tds&quot;</span><span class="p">;</span>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addPacketData</span><span class="p">(</span><span class="nx">appName</span><span class="p">,</span> <span class="nx">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">,</span> <span class="nx">encoding</span> <span class="o">=</span> <span class="s1">&#39;ucs2&#39;</span><span class="p">);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-30">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-30">&#182;</a>               </div>               <p>ServerName </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addPacketData</span><span class="p">(</span><span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="nx">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-31">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-31">&#182;</a>               </div>               <p>Unused </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addPacketData</span><span class="p">(</span><span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="nx">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-32">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-32">&#182;</a>               </div>               <p>CltIntName </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addPacketData</span><span class="p">(</span><span class="s2">&quot;ODBC&quot;</span><span class="p">,</span> <span class="nx">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">,</span> <span class="nx">encoding</span> <span class="o">=</span> <span class="s1">&#39;ucs2&#39;</span><span class="p">);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-33">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-33">&#182;</a>               </div>               <p>Language </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addPacketData</span><span class="p">(</span><span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="nx">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-34">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-34">&#182;</a>               </div>               <p>Database </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addPacketData</span><span class="p">(</span><span class="nx">database</span><span class="p">,</span> <span class="nx">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">,</span> <span class="nx">encoding</span> <span class="o">=</span> <span class="s1">&#39;ucs2&#39;</span><span class="p">);</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-35">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-35">&#182;</a>               </div>               <p>Client ID
+     <BYTES>00 50 8B E2 B7 8F </BYTES></p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addData</span><span class="p">([</span><span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x50</span><span class="p">,</span> <span class="mh">0x8b</span><span class="p">,</span> <span class="mh">0xE2</span><span class="p">,</span> <span class="mh">0xB7</span><span class="p">,</span> <span class="mh">0x8f</span><span class="p">]);</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-36">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-36">&#182;</a>               </div>               <p>SSPI </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addPacketData</span><span class="p">(</span><span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="nx">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">);</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-37">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-37">&#182;</a>               </div>               <p>AtchDBFile </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addPacketData</span><span class="p">(</span><span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="nx">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">);</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-38">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-38">&#182;</a>               </div>               <p>ChangePassword </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addPacketData</span><span class="p">(</span><span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="nx">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">);</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-39">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-39">&#182;</a>               </div>               <p>SSPILong
+      <LONG>00 00 00 00 </LONG></p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addData</span><span class="p">([</span><span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">]);</span>
+
+    <span class="kd">var</span> <span class="nx">buf</span> <span class="o">=</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">toBuffer</span><span class="p">();</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-40">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-40">&#182;</a>               </div>               <p>set length in packet </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">buf</span><span class="p">.</span><span class="nx">writeUInt8</span><span class="p">(</span><span class="nx">buf</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="nx">buf</span><span class="p">.</span><span class="nx">writeUInt32LE</span><span class="p">(</span><span class="nx">buf</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+
+
+    <span class="c1">//return new Buffer([0x10, 0x01, 0x00, 0x90, 0x00, 0x00, 0x01, 0x00, 0x88, 0x00, 0x00, 0x00, 0x02, 0x00, 0x09, 0x72, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE0, 0x03, 0x00, 0x00, 0xE0, 0x01, 0x00, 0x00, 0x09, 0x04, 0x00, 0x00, 0x5E, 0x00, 0x08, 0x00, 0x6E, 0x00, 0x02, 0x00, 0x72, 0x00, 0x00, 0x00, 0x72, 0x00, 0x07, 0x00, 0x80, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x80, 0x00, 0x04, 0x00, 0x88, 0x00, 0x00, 0x00, 0x88, 0x00, 0x00, 0x00, 0x00, 0x50, 0x8B, 0xE2, 0xB7, 0x8F, 0x88, 0x00, 0x00, 0x00, 0x88, 0x00, 0x00, 0x00, 0x88, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x73, 0x00, 0x6B, 0x00, 0x6F, 0x00, 0x73, 0x00, 0x74, 0x00, 0x6F, 0x00, 0x76, 0x00, 0x31, 0x00, 0x73, 0x00, 0x61, 0x00, 0x4F, 0x00, 0x53, 0x00, 0x51, 0x00, 0x4C, 0x00, 0x2D, 0x00, 0x33, 0x00, 0x32, 0x00, 0x4F, 0x00, 0x44, 0x00, 0x42, 0x00, 0x43, 0x00]);</span>
+
+    <span class="k">return</span> <span class="nx">buf</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+<span class="cm">/*</span>
+<span class="cm">** Login Response is a token stream, then needs read the token and read your content, read next token and so on</span>
+<span class="cm">*/</span>
+<span class="cm">/*</span>
+<span class="cm">packetBuilder.LoginResponse = function(buffer) {</span>
+<span class="cm">    assert.ok(arguments.length === 1, &quot;The argument &#39;buffer&#39; is missing!&quot;);</span>
+<span class="cm">    assert.ok(buffer[0] === 0x04, &quot;This buffer is not Server Response or type bit not is 0x04!&quot;);</span>
+
+<span class="cm">    var offset = 8; // header length</span>
+<span class="cm">    var response = {</span>
+<span class="cm">        envchange: [],</span>
+<span class="cm">        info: []</span>
+<span class="cm">    };</span>
+
+<span class="cm">    while (offset &lt; buffer.length) {</span>
+
+<span class="cm">        var token = buffer.readUInt8(offset, false); offset += 1;</span>
+
+<span class="cm">        //</span>
+<span class="cm">        // ENVCHANGE</span>
+<span class="cm">        //</span>
+<span class="cm">        if (token === 0xE3) {</span>
+<span class="cm">            var length = buffer.readUInt16LE(offset, false); offset += 2;</span>
+<span class="cm">            var type = buffer.readUInt8(offset, false); //offset += 1;</span>
+
+<span class="cm">            var data = buffer.slice(offset, offset + length); offset += length;</span>
+
+<span class="cm">            response.envchange.push({ type: type, offset: offset, length: length, data: data });</span>
+<span class="cm">        }</span>
+
+
+
+<span class="cm">        //</span>
+<span class="cm">        // INFO</span>
+<span class="cm">        //</span>
+<span class="cm">        if (token === 0xAB) {</span>
+<span class="cm">            var info = {};</span>
+<span class="cm">            info.length = buffer.readUInt16LE(offset, false); offset += 2;</span>
+<span class="cm">            info.number = buffer.readUInt32LE(offset, false); //offset += 4;</span>
+<span class="cm">            info.state = buffer.readUInt8(offset, false); //offset += 1;</span>
+<span class="cm">            info.classType = buffer.readUInt8(offset, false); //offset += 1;</span>
+<span class="cm">            info.msgLength = buffer.readUInt16LE(offset, false); //offset += 2;</span>
+<span class="cm">            info.msg = buffer.toString(&#39;utf8&#39;, offset + 4 + 1 + 1 + 2, offset + 4 + 1 + 1 + 2 + info.length).replace(/\u0000/g,&#39;&#39;); offset += info.length;</span>
+
+<span class="cm">            response.info.push(info);</span>
+<span class="cm">        }</span>
+
+
+<span class="cm">        //return response;</span>
+<span class="cm">    }</span>
+
+
+<span class="cm">    console.log(response);</span>
+<span class="cm">    return response;</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
+</pre></div>             </td>           </tr>                               <tr id="section-41">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-41">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="splitPacket" /></p>
+
+<h2>function packetBuilder.splitPacket</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>buf <em>buffer</em></li>
+</ul>
+
+<h3>return:</h3>
+
+<ul>
+<li><em>array</em> of buffers</li>
+</ul>
+
+<p>splits the packet in chunks of max. 4096 byte</p>             </td>             <td class="code">               <div class="highlight"><pre>
+<span class="nx">packetBuilder</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">splitPacket</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">splitPacket</span><span class="p">(</span><span class="nx">buf</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-42">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-42">&#182;</a>               </div>               <p>max. packet size </p>             </td>             <td class="code">               <div class="highlight"><pre>
+  <span class="kd">var</span> <span class="nx">pSize</span> <span class="o">=</span> <span class="mi">4096</span><span class="p">;</span>
+
+  <span class="kd">var</span> <span class="nx">b_arr</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Array</span><span class="p">();</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-43">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-43">&#182;</a>               </div>               <p>init with buffer </p>             </td>             <td class="code">               <div class="highlight"><pre>
+  <span class="nx">b_arr</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">buf</span><span class="p">;</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-44">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-44">&#182;</a>               </div>               <p>loop until latest array element smaller than max. packet size </p>             </td>             <td class="code">               <div class="highlight"><pre>
+  <span class="k">while</span> <span class="p">(</span><span class="nx">b_arr</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="nx">pSize</span><span class="p">)</span> <span class="p">{</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-45">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-45">&#182;</a>               </div>               <p>init temp buffer for split operation </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">b1</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="nx">pSize</span><span class="p">);</span>
+    <span class="nx">b2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="nx">b_arr</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">length</span> <span class="o">-</span> <span class="nx">pSize</span><span class="p">);</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-46">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-46">&#182;</a>               </div>               <p>fill temp buffers </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">b_arr</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">copy</span><span class="p">(</span><span class="nx">b1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="nx">pSize</span><span class="p">);</span>
+    <span class="nx">b_arr</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">copy</span><span class="p">(</span><span class="nx">b2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span><span class="p">);</span>
+    <span class="nx">b_arr</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">copy</span><span class="p">(</span><span class="nx">b2</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="nx">pSize</span><span class="p">);</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-47">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-47">&#182;</a>               </div>               <p>set packet metadata for first buffer </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    </pre></div>             </td>           </tr>                               <tr id="section-48">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-48">&#182;</a>               </div>               <p>state = 4 -> not last packet </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">b1</span><span class="p">.</span><span class="nx">writeUInt8</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-49">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-49">&#182;</a>               </div>               <p>packet length </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">b1</span><span class="p">.</span><span class="nx">writeUInt16BE</span><span class="p">(</span><span class="nx">b1</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-50">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-50">&#182;</a>               </div>               <p>packet number </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">b1</span><span class="p">.</span><span class="nx">writeUInt8</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span><span class="mi">6</span><span class="p">);</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-51">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-51">&#182;</a>               </div>               <p>set packet metadata for secound buffer </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    </pre></div>             </td>           </tr>                               <tr id="section-52">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-52">&#182;</a>               </div>               <p>state = 1 last packet </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">b2</span><span class="p">.</span><span class="nx">writeUInt8</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-53">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-53">&#182;</a>               </div>               <p>packet length </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">b2</span><span class="p">.</span><span class="nx">writeUInt16BE</span><span class="p">(</span><span class="nx">b2</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-54">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-54">&#182;</a>               </div>               <p>packet number </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">b2</span><span class="p">.</span><span class="nx">writeUInt8</span><span class="p">(</span><span class="nx">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">);</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-55">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-55">&#182;</a>               </div>               <p>write temp buffers to array </p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">b_arr</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">b1</span><span class="p">;</span>
+    <span class="nx">b_arr</span><span class="p">[</span><span class="nx">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nx">b2</span><span class="p">;</span>
+
+    <span class="nx">i</span><span class="o">++</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nx">b_arr</span><span class="p">;</span>
+
+<span class="p">}</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-56">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-56">&#182;</a>               </div>               <p><a href="#top">top</a> <a id="ExecuteQuery" /></p>
+
+<h2>function packetBuilder.ExecuteQuery</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>query <em>string</em></li>
+</ul>
+
+<h3>return:</h3>
+
+<ul>
+<li><em>array</em> of buffers</li>
+</ul>
+
+<p>Execute a query
+Returns raw packagedata in an array of buffers[4096]</p>             </td>             <td class="code">               <div class="highlight"><pre>
+<span class="nx">packetBuilder</span><span class="p">.</span><span class="nx">ExecuteQuery</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">ExecuteQuery</span><span class="p">(</span><span class="nx">query</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kd">var</span> <span class="nx">msg</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">packetBuilder</span><span class="p">();</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-57">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-57">&#182;</a>               </div>               <p>acket type: SQL Batch</p>             </td>             <td class="code">               <div class="highlight"><pre>
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addHeaderPacket</span><span class="p">(</span><span class="mh">0x01</span><span class="p">);</span>
+
+    <span class="nx">msg</span><span class="p">.</span><span class="nx">addPacketData</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">endian</span> <span class="o">=</span> <span class="s1">&#39;little&#39;</span><span class="p">,</span> <span class="nx">encoding</span> <span class="o">=</span> <span class="s1">&#39;ucs2&#39;</span><span class="p">,</span> <span class="nx">typ</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">);</span>
+
+    <span class="kd">var</span> <span class="nx">b</span> <span class="o">=</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">toBuffer</span><span class="p">();</span>
+
+    <span class="kd">var</span> <span class="nx">b_arr</span> <span class="o">=</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">splitPacket</span><span class="p">(</span><span class="nx">b</span><span class="p">);</span>
+
+  <span class="k">return</span> <span class="p">(</span><span class="nx">b_arr</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">packetBuilder</span> <span class="o">=</span> <span class="nx">packetBuilder</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
