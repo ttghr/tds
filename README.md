@@ -119,7 +119,7 @@ Modul structure overview:
 
 ![modul structure](./docs/chart/images/tdsStructureMin.png)
 
-browse the deatiled documentation [here](.\docs\chart\tds_chart.html). (node_modules/tds/docs/chart/tds_chart.html)
+browse the deatiled documentation [here](docs\chart\tds_chart.html). (docs/chart/tds_chart.html)
 
 
 
