@@ -117,7 +117,7 @@ Documentation
 
 Modul structure overview:
 
-![modul structure](./docs/chart/images/tdsStructureMin.png)
+![modul structure](http://ttghr.github.io/tds/docs/chart/images/tdsStructureMin.png)
 
 browse the deatiled documentation [here](http://ttghr.github.io/tds/docs/chart/tds_chart.html). (docs/chart/tds_chart.html)
 
