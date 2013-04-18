@@ -1,5 +1,6 @@
 {
-  "name": "tds",
+  "name": "tds4node",
+  "version": "0.0.1",
   "main" : "./lib/tds.js",
   "description": "tds is an implementation of the TDS protocol,which is used for communication with Microsoft's SQL Server.",
   "author": "ttghr <ttg1@arcor.de>",
