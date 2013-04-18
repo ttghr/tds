@@ -1,0 +1,39 @@
+<!DOCTYPE html>  <html> <head>   <title>defaults.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="../docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="connection.html">                 connection.js               </a>                                           <a class="source" href="defaults.html">                 defaults.js               </a>                                           <a class="source" href="packetBuilder.html">                 packetBuilder.js               </a>                                           <a class="source" href="responseParser.html">                 responseParser.js               </a>                                           <a class="source" href="rowParser.html">                 rowParser.js               </a>                                           <a class="source" href="tds.html">                 tds.js               </a>                                           <a class="source" href="typeParser.html">                 typeParser.js               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">       <ul>        <li>         <a href="../chart/tds_chart.html">tds modul structure (overview)</a>        </li>       </ul>             <h1>               defaults.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <h3>Author: <span> H.Ristau</span><a id="top"></a></h3>
+
+<p>configuration object for the <a href="#tds">tds</a> modul</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+
+    <span class="nx">ConnectionString</span> <span class="o">:</span> <span class="p">{</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>database server </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="nx">Server</span><span class="o">:</span><span class="s1">&#39;5CB2175RH5&#39;</span><span class="p">,</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>database user's name </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="nx">Login</span><span class="o">:</span> <span class="s1">&#39;sa&#39;</span><span class="p">,</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>name of database to connect </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="nx">Database</span><span class="o">:</span> <span class="s1">&#39;master&#39;</span><span class="p">,</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>database user's password </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="nx">Password</span><span class="o">:</span> <span class="s1">&#39;pilsbier&#39;</span><span class="p">,</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>database port </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="nx">Port</span><span class="o">:</span> <span class="mi">1433</span><span class="p">,</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>socket-connection timeout </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="nx">Timeout</span><span class="o">:</span><span class="mi">10000</span>
+    <span class="p">},</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>number of connections to use in connection pool
+                0 will disable connection pooling</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+    <span class="nx">poolSize</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>duration of node-pool timeout </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+    <span class="nx">poolIdleTimeout</span><span class="o">:</span> <span class="mi">30000000</span><span class="p">,</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>port on that the tds server is listen </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+    <span class="nx">tdsServerPort</span><span class="o">:</span> <span class="mi">8888</span>
+  <span class="p">}</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
