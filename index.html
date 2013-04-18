@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="tds : TDS implementation in Javascript for connecting SQL Server " />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>tds</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/hrsono/tds">View on GitHub</a>
+
+          <h1 id="project_title">tds</h1>
+          <h2 id="project_tagline">TDS implementation in Javascript for connecting SQL Server </h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/hrsono/tds/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/hrsono/tds/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>tds (node implementation of the TDS protocol for SQL Server)</h1>
+
+<p>tds is an implementation of the <a href="http://msdn.microsoft.com/en-us/library/dd304523.aspx">TDS protocol</a>,
+which is used for communication with Microsoft's SQL Server.</p>
+
+<h2>Status</h2>
+
+<p>Current version: v0.0.1</p>
+
+<h2>requierements:</h2>
+
+<ul>
+<li>Windows System with <a href="http://nodejs.org">node.js</a> (version &gt;= 0.6.6)<br><em>(other OS should be work too, but not tested until now)</em>
+</li>
+<li>SQL Server (version &gt;= 2000) connection over TCP/IP (SQL authentification),<br><a href="http://www.microsoft.com/de-de/download/details.aspx?id=29062">SQL Server Express 2012</a>
+</li>
+</ul><h2>install</h2>
+
+<h3>requierd modules</h3>
+
+<ul>
+<li>
+<strong>ansi-color</strong> (used by tds_test.js)<br>
+available on github: <a href="https://github.com/loopj/commonjs-ansi-color">https://github.com/loopj/commonjs-ansi-color</a>
+</li>
+<li>
+<strong>generic-pool</strong> (used by tds.connection)<br>
+available on github: <a href="https://github.com/coopernurse/node-pool">https://github.com/coopernurse/node-pool</a>
+</li>
+</ul><p>install the <strong>tds</strong> modul manually by copying the tds folder into the node_modules folder (npm coming soon) edit default.js, configure your database connection </p>
+
+<div class="highlight"><pre><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nx">ConnectionString</span> <span class="o">:</span> <span class="p">{</span>
+            <span class="cm">/** database server */</span>
+            <span class="nx">Server</span><span class="o">:</span><span class="s1">'5CB2175RH5'</span><span class="p">,</span>
+            <span class="cm">/** database user's name */</span>
+            <span class="nx">Login</span><span class="o">:</span> <span class="s1">'sa'</span><span class="p">,</span>
+            <span class="cm">/** name of database to connect */</span>
+            <span class="nx">Database</span><span class="o">:</span> <span class="s1">'master'</span><span class="p">,</span>
+            <span class="cm">/** database user's password */</span>
+            <span class="nx">Password</span><span class="o">:</span> <span class="s1">'pilsbier'</span><span class="p">,</span>
+            <span class="cm">/** database port */</span>
+            <span class="nx">Port</span><span class="o">:</span> <span class="mi">1433</span><span class="p">,</span>
+            <span class="cm">/** socket-connection timeout */</span>
+            <span class="nx">Timeout</span><span class="o">:</span><span class="mi">10000</span><span class="p">,</span>
+        <span class="p">},</span>
+
+        <span class="cm">/** number of connections to use in connection pool</span>
+<span class="cm">                0 will disable connection pooling</span>
+<span class="cm">        */</span>
+        <span class="nx">poolSize</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="cm">/** duration of node-pool timeout */</span>
+        <span class="nx">poolIdleTimeout</span><span class="o">:</span> <span class="mi">30000000</span><span class="p">,</span>
+        <span class="cm">/** tds_port */</span>
+        <span class="nx">tdsServerPort</span><span class="o">:</span> <span class="mi">8888</span>
+    <span class="p">}</span>
+</pre></div>
+
+<ol>
+<li>open a commad shell</li>
+<li>navigate to your node folder (i.e. "c:\program files\nodejs\")</li>
+<li><code>cd node_modules</code></li>
+<li><code>cd tds</code></li>
+<li>start the tds server:
+<code>node tds_server</code>
+</li>
+</ol><p>normally tds_server listen at port 8888<br>
+to test your installation, start your browser and fire a simple request like:<br><code>http://localhost:8888/tds?select getdate() as d</code></p>
+
+<p>on a working system the response of the example request looks like the following JSON data with the actual date:</p>
+
+<div class="highlight"><pre><span class="p">{</span>
+
+    <span class="s2">"result"</span><span class="o">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">"colData"</span><span class="o">:</span> <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">"value"</span><span class="o">:</span> <span class="s2">"d"</span><span class="p">,</span>
+                    <span class="s2">"precision"</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+                    <span class="s2">"scale"</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+                    <span class="s2">"type"</span><span class="o">:</span> <span class="mi">61</span>
+                <span class="p">}</span>
+            <span class="p">],</span>
+            <span class="s2">"rows"</span><span class="o">:</span> <span class="p">[</span>
+                <span class="p">[</span>
+                    <span class="s2">"2012-11-02T16:15:48.716Z"</span>
+                <span class="p">]</span>
+            <span class="p">],</span>
+            <span class="s2">"outputParams"</span><span class="o">:</span> <span class="p">[</span> <span class="p">],</span>
+            <span class="s2">"returnStatus"</span><span class="o">:</span> <span class="kc">null</span>
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="s2">"error"</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">"sqlErrNo"</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+        <span class="s2">"message"</span><span class="o">:</span> <span class="s2">""</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</pre></div>
+
+<p><strong><em>notice:</em></strong> make sure, that your browser is able to handle http-headers<br>
+with <code>'Content-Type': 'application/json; charset=utf-8'</code>, for Firefox you can use <a href="http://www.jsonview.com">JSONView</a> </p>
+
+<h2>Test</h2>
+
+<p>after install you are able to run the tests</p>
+
+<ol>
+<li>change to your node folder </li>
+<li><code>cd node_modules</code></li>
+<li><code>cd tds</code></li>
+<li><code>node tds_test</code></li>
+</ol><h2>Documentation</h2>
+
+<p>Modul structure overview:</p>
+
+<p><img src="./docs/chart/images/tdsStructureMin.png" alt="modul structure"></p>
+
+<p>browse the deatiled documentation <a href=".docscharttds_chart.html">here</a>. (node_modules/tds/docs/chart/tds_chart.html)</p>
+
+<h2>License</h2>
+
+<p>(The MIT License)</p>
+
+<p>Copyright (c) 2010-2012 Mike D Pilsbury</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">tds maintained by <a href="https://github.com/hrsono">hrsono</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

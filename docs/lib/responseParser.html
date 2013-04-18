@@ -1,0 +1,642 @@
+<!DOCTYPE html>  <html> <head>   <title>responseParser.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="../docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="connection.html">                 connection.js               </a>                                           <a class="source" href="defaults.html">                 defaults.js               </a>                                           <a class="source" href="packetBuilder.html">                 packetBuilder.js               </a>                                           <a class="source" href="responseParser.html">                 responseParser.js               </a>                                           <a class="source" href="rowParser.html">                 rowParser.js               </a>                                           <a class="source" href="tds.html">                 tds.js               </a>                                           <a class="source" href="typeParser.html">                 typeParser.js               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">       <ul>        <li>         <a href="../chart/tds_chart.html">tds modul structure (overview)</a>        </li>       </ul>             <h1>               responseParser.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <h3>Author: <span> H.Ristau</span><a id="top" /></h3>
+
+<p>methods for parsing the DB response.</p>
+
+<h4>requires:</h4>
+
+<ul>
+<li><a href="./rowParser.html">rowParser.js</a></li>
+</ul>
+
+<h3>functions:</h3>
+
+<ul>
+<li><a href="#parseErrorMessage">parseErrorMessage(data, offset)</a></li>
+<li><a href="#parseInfoMessage">parseInfoMessage(data, offset)</a></li>
+<li><a href="#parseLoginResponse">parseLoginResponse(data,len)</a></li>
+<li><a href="#parseDone">parseDone(data, offset)</a></li>
+<li><a href="#parseResultSet">parseResultSet(data, offset, resultSetCount)</a></li>
+<li><a href="#parseSqlBatchResponse">parseSqlBatchResponse(data,len)</a></li>
+<li><a href="#concatPackets">concatPackets(packetArr)</a></li>
+<li><a href="#parseDbResponse">parseDbResponse(packetArr)</a></li>
+</ul>             </td>             <td class="code">               <div class="highlight"><pre><span class="kd">var</span> <span class="nx">rowParser</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/rowParser.js&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">responseParser</span> <span class="o">=</span>  <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>internal vars for the parsing result </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="k">this</span><span class="p">.</span><span class="nx">error</span> <span class="o">=</span> <span class="p">{</span><span class="nx">sqlErrNo</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">},</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">result</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Array</span><span class="p">(),</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">isConnected</span> <span class="o">=</span> <span class="kc">null</span>
+<span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">p</span> <span class="o">=</span> <span class="nx">responseParser</span><span class="p">.</span><span class="nx">prototype</span><span class="p">;</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseErrorMessage" /></p>
+
+<h2>function parseErrorMessage</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+</ul>
+
+<p>parsing of an error message</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+<span class="nx">p</span><span class="p">.</span><span class="nx">parseErrorMessage</span><span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">)</span> <span class="p">{</span>
+
+
+  <span class="k">this</span><span class="p">.</span><span class="nx">error</span><span class="p">.</span><span class="nx">sqlErrNo</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt32LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+  <span class="nx">offset</span><span class="o">+=</span><span class="mi">4</span><span class="p">;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>ignor state </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">offset</span><span class="o">++</span><span class="p">;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>ignor security level </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">offset</span><span class="o">++</span><span class="p">;</span>
+
+  <span class="kd">var</span> <span class="nx">messageLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="p">;</span>
+  <span class="nx">offset</span><span class="o">+=</span><span class="mi">2</span><span class="p">;</span>
+
+
+  <span class="k">this</span><span class="p">.</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;ucs2&#39;</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">offset</span><span class="o">+</span><span class="nx">messageLen</span><span class="p">);</span>
+
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">error</span><span class="p">);</span>
+  
+<span class="p">}</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseInfoMessage" /></p>
+
+<h2>function parseInfoMessage</h2>
+
+<p>Appears by using print statements in SQL-Batch or procedure</p>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+</ul>
+
+<p>Parsing/ignoring of an info message.</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+<span class="nx">p</span><span class="p">.</span><span class="nx">parseInfoMessage</span><span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">)</span> <span class="p">{</span>
+
+
+  <span class="kd">var</span> <span class="nx">messageLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+  <span class="nx">offset</span><span class="o">+=</span><span class="mi">2</span><span class="p">;</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>calculate the new offset and return it </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="k">return</span> <span class="p">(</span><span class="nx">offset</span><span class="o">+</span><span class="nx">messageLen</span><span class="p">);</span>
+
+<span class="p">}</span>
+
+
+</pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseLoginResponse" /></p>
+
+<h2>function parseLoginResponse</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>int</em> new offset</li>
+</ul>
+
+<p>Parsing the response of a login request.
+Sets the isConnected flag in according to the parsing result</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+<span class="nx">p</span><span class="p">.</span><span class="nx">parseLoginResponse</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span><span class="nx">len</span><span class="p">){</span>
+
+  <span class="kd">var</span> <span class="nx">notLastDone</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">offset</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">token</span> <span class="o">=</span> <span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+  <span class="kd">var</span> <span class="nx">tokenLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+  <span class="nx">offset</span><span class="o">+=</span><span class="mi">2</span><span class="p">;</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>loop over data buffer while token isn't done and not end of data </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="k">while</span> <span class="p">(</span> <span class="nx">notLastDone</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">offset</span> <span class="o">&lt;=</span> <span class="nx">len</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span> <span class="p">)</span> <span class="p">{</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>token handling </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+    <span class="k">switch</span> <span class="p">(</span><span class="nx">token</span><span class="p">)</span> <span class="p">{</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>environment change </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xe3</span><span class="o">:</span>
+        <span class="k">break</span><span class="p">;</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>error message </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xaa</span><span class="o">:</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">isConnected</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">parseErrorMessage</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">);</span>
+        <span class="k">return</span> <span class="p">(</span><span class="kc">false</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>info message </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xab</span><span class="o">:</span>
+        <span class="k">break</span><span class="p">;</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>login acknowlegment </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xad</span><span class="o">:</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">isConnected</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-15">&#182;</a>               </div>               <p>done </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xfd</span><span class="o">:</span>
+        <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">parseDone</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="o">-</span><span class="mi">2</span><span class="p">);</span>
+        </pre></div>             </td>           </tr>                               <tr id="section-16">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-16">&#182;</a>               </div>               <p>done token has a const length </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+        <span class="nx">tokenLen</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;;</span>
+        <span class="nx">notLastDone</span> <span class="o">=</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">moreDone</span><span class="p">;</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span> <span class="nx">notLastDone</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">offset</span> <span class="o">&lt;=</span> <span class="nx">len</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span> <span class="p">)</span> <span class="p">{</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p>read next token and calculate offset </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="nx">offset</span><span class="o">+=</span><span class="nx">tokenLen</span><span class="p">;</span>
+      <span class="nx">token</span> <span class="o">=</span> <span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+      <span class="nx">tokenLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+      <span class="nx">offset</span><span class="o">+=</span><span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-18">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseDone" /></p>
+
+<h2>function parseDone</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em> ret
+<ul><li><em>boolean</em> moreDone</li>
+<li><em>int</em> offset</li></ul></li>
+</ul>
+
+<p>Parsing a done message.
+Checks if this is the last done message.</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+<span class="nx">p</span><span class="p">.</span><span class="nx">parseDone</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">fdState</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+
+  <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">moreDone</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+              <span class="nx">offset</span><span class="o">:</span> <span class="nx">offset</span> <span class="p">}</span>
+
+  <span class="nx">ret</span><span class="p">.</span><span class="nx">offset</span><span class="o">+=</span><span class="mi">8</span><span class="p">;</span>
+  <span class="nx">ret</span><span class="p">.</span><span class="nx">moreDone</span> <span class="o">=</span> <span class="p">(</span><span class="nx">fdState</span> <span class="o">&amp;</span> <span class="mh">0x01</span><span class="p">)</span> <span class="o">==</span> <span class="mh">0x01</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="p">(</span><span class="nx">ret</span><span class="p">);</span>
+<span class="p">}</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-19">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseResultSet" /></p>
+
+<h2>function parseResultSet</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>offset <em>int</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em> ret
+<ul><li><em>int</em> offset</li>
+<li><em>int</em> resultSetCount</li>
+<li><em>boolean</em> nextResultSet (true if there another resultset)</li></ul></li>
+</ul>
+
+<p>Parsing a complete resultset.
+First the meta data (structure) of the resultset will be analysed,
+after that the data rows will be parsed</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+<span class="nx">p</span><span class="p">.</span><span class="nx">parseResultSet</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">resultSetCount</span><span class="p">){</span>
+
+  <span class="kd">var</span> <span class="nx">cols</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+  <span class="nx">offset</span><span class="o">+=</span><span class="mi">2</span><span class="p">;</span>
+  <span class="nx">offset</span><span class="o">+=</span><span class="mi">2</span><span class="p">;</span> <span class="c1">//usertype</span>
+  <span class="nx">offset</span><span class="o">+=</span><span class="mi">2</span><span class="p">;</span> <span class="c1">//flags</span>
+  <span class="kd">var</span> <span class="nx">colType</span> <span class="o">=</span> <span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+  <span class="kd">var</span> <span class="nx">result</span><span class="p">;</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-20">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-20">&#182;</a>               </div>               <p>initialize the object for the resultset </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="kd">var</span> <span class="nx">resultSet</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">colData</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Array</span><span class="p">(),</span>  <span class="nx">rows</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Array</span><span class="p">(),</span> <span class="nx">outputParams</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Array</span><span class="p">(),</span> <span class="nx">returnStatus</span><span class="o">:</span> <span class="kc">null</span> <span class="p">};</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">result</span><span class="p">[</span><span class="nx">resultSetCount</span><span class="p">]</span> <span class="o">=</span> <span class="nx">resultSet</span><span class="p">;</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-21">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-21">&#182;</a>               </div>               <p>initialize the object for the return </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">offset</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">resultSetCount</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">nextResultSet</span><span class="o">:</span> <span class="kc">false</span><span class="p">};</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-22">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-22">&#182;</a>               </div>               <p>parse meta data </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="k">for</span>  <span class="p">(</span> <span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">cols</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span> <span class="c1">//parse all cols</span>
+    <span class="nx">result</span> <span class="o">=</span> <span class="nx">rowParser</span><span class="p">.</span><span class="nx">parseColMetaData</span><span class="p">(</span><span class="nx">colType</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">);</span>
+    <span class="nx">offset</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">newOffset</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">result</span><span class="p">[</span><span class="nx">resultSetCount</span><span class="p">].</span><span class="nx">colData</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">value</span><span class="o">:</span> <span class="nx">result</span><span class="p">.</span><span class="nx">value</span><span class="p">,</span>
+                                               <span class="nx">precision</span> <span class="o">:</span> <span class="nx">result</span><span class="p">.</span><span class="nx">precision</span> <span class="o">?</span> <span class="nx">result</span><span class="p">.</span><span class="nx">precision</span> <span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+                                               <span class="nx">scale</span><span class="o">:</span> <span class="nx">result</span><span class="p">.</span><span class="nx">scale</span> <span class="o">?</span> <span class="nx">result</span><span class="p">.</span><span class="nx">scale</span> <span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+                                               <span class="nx">type</span><span class="o">:</span> <span class="nx">colType</span> <span class="p">};</span>
+    <span class="nx">offset</span><span class="o">+=</span><span class="mi">4</span><span class="p">;</span>
+    <span class="nx">colType</span> <span class="o">=</span> <span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+  <span class="p">}</span>
+
+  <span class="nx">offset</span><span class="o">-=</span><span class="mi">4</span><span class="p">;</span>
+  <span class="c1">//console.log(&#39;meta:&#39;+this.result);</span>
+  <span class="c1">//console.log(&#39;_data:&#39;+data);</span>
+  <span class="kd">var</span> <span class="nx">token</span> <span class="o">=</span> <span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+  <span class="kd">var</span> <span class="nx">rowParsed</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-23">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-23">&#182;</a>               </div>               <p>parse data rows </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="nx">rowParsed</span><span class="p">)</span> <span class="p">{</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-24">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-24">&#182;</a>               </div>               <p>token handling </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+    <span class="k">switch</span> <span class="p">(</span><span class="nx">token</span><span class="p">)</span> <span class="p">{</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-25">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-25">&#182;</a>               </div>               <p>error message </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xaa</span><span class="o">:</span>
+        <span class="kd">var</span> <span class="nx">tokenLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">parseErrorMessage</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">);</span>
+        <span class="nx">rowParsed</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-26">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-26">&#182;</a>               </div>               <p>info message </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xab</span><span class="o">:</span>
+        <span class="nx">offset</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">parseInfoMessage</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">);</span>
+        <span class="nx">rowParsed</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="nx">token</span><span class="o">=</span><span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+        <span class="nx">offset</span><span class="o">++</span><span class="p">;</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-27">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-27">&#182;</a>               </div>               <p>next result set </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0x81</span><span class="o">:</span>
+        <span class="nx">ret</span><span class="p">.</span><span class="nx">offset</span> <span class="o">=</span> <span class="o">--</span><span class="nx">offset</span><span class="p">;</span>
+        <span class="nx">ret</span><span class="p">.</span><span class="nx">resultSetCount</span> <span class="o">=</span> <span class="o">++</span><span class="nx">resultSetCount</span><span class="p">;</span>
+        <span class="nx">ret</span><span class="p">.</span><span class="nx">nextResultSet</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="nx">rowParsed</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-28">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-28">&#182;</a>               </div>               <p>row </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xd1</span><span class="o">:</span>
+        <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rowParser</span><span class="p">.</span><span class="nx">parseRowData</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">result</span><span class="p">[</span><span class="nx">resultSetCount</span><span class="p">].</span><span class="nx">colData</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">);</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">result</span><span class="p">[</span><span class="nx">resultSetCount</span><span class="p">].</span><span class="nx">rows</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">this</span><span class="p">.</span><span class="nx">error</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">error</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="nx">offset</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">offset</span><span class="p">;</span>
+
+        <span class="nx">token</span><span class="o">=</span><span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+        <span class="nx">offset</span><span class="o">++</span><span class="p">;</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-29">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-29">&#182;</a>               </div>               <p>returnStatus </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0x79</span><span class="o">:</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">result</span><span class="p">[</span><span class="nx">resultSetCount</span><span class="p">].</span><span class="nx">returnStatus</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readInt32LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+        <span class="nx">offset</span><span class="o">+=</span><span class="mi">4</span><span class="p">;</span>
+        <span class="nx">token</span><span class="o">=</span><span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+        <span class="nx">offset</span><span class="o">++</span><span class="p">;</span>
+      <span class="k">break</span><span class="p">;</span>
+
+
+      </pre></div>             </td>           </tr>                               <tr id="section-30">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-30">&#182;</a>               </div>               <p>doneInProc </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xff</span><span class="o">:</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-31">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-31">&#182;</a>               </div>               <p>doneProc </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xfe</span><span class="o">:</span>
+        <span class="c1">//only info</span>
+        <span class="kd">var</span> <span class="nx">doneRes</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">parseDone</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">);</span>
+        <span class="nx">offset</span> <span class="o">=</span> <span class="nx">doneRes</span><span class="p">.</span><span class="nx">offset</span><span class="p">;</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="nx">doneRes</span><span class="p">.</span><span class="nx">moreDone</span><span class="p">){</span>
+          <span class="nx">token</span><span class="o">=</span><span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+          <span class="nx">offset</span><span class="o">++</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">else</span><span class="p">{</span>
+          <span class="nx">rowParsed</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="p">}</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-32">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-32">&#182;</a>               </div>               <p>done </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xfd</span><span class="o">:</span>
+        <span class="kd">var</span> <span class="nx">fdState</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+        <span class="nx">offset</span><span class="o">+=</span><span class="mi">2</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span> <span class="p">(</span><span class="nx">fdState</span> <span class="o">&amp;</span> <span class="mh">0x01</span><span class="p">)</span> <span class="o">==</span> <span class="mh">0x01</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">offset</span> <span class="o">+=</span> <span class="mi">6</span><span class="p">;</span>
+          <span class="nx">token</span><span class="o">=</span><span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+          <span class="nx">offset</span><span class="o">++</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">{</span>
+          <span class="nx">rowParsed</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="p">}</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-33">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-33">&#182;</a>               </div>               <p>unknown token </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">default</span><span class="o">:</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;token ignored:&#39;</span><span class="o">+</span><span class="nx">token</span><span class="p">)</span>
+        <span class="kd">var</span> <span class="nx">tokenLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+        <span class="nx">offset</span> <span class="o">+=</span><span class="mi">2</span><span class="p">;</span>
+        <span class="nx">offset</span> <span class="o">+=</span> <span class="nx">tokenLen</span><span class="p">;</span>
+        <span class="nx">token</span> <span class="o">=</span> <span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+
+  <span class="k">return</span> <span class="p">(</span><span class="nx">ret</span><span class="p">);</span>
+<span class="p">}</span>
+
+</pre></div>             </td>           </tr>                               <tr id="section-34">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-34">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseSqlBatchResponse" /></p>
+
+<h2>function parseSqlBatchResponse</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>data <em>buffer</em></li>
+<li>len <em>int</em></li>
+</ul>
+
+<p>Parsing a response of a sql batch request.</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+<span class="nx">p</span><span class="p">.</span><span class="nx">parseSqlBatchResponse</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span><span class="nx">len</span><span class="p">){</span>
+
+  <span class="kd">var</span> <span class="nx">offset</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">token</span> <span class="o">=</span> <span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+  <span class="kd">var</span> <span class="nx">resultSetCount</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-35">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-35">&#182;</a>               </div>               <p>loop over data buffer while not end of data </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="k">while</span> <span class="p">(</span> <span class="p">(</span><span class="nx">offset</span> <span class="o">&lt;=</span> <span class="nx">len</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">offset</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">)</span> <span class="p">{</span>
+
+    <span class="k">switch</span> <span class="p">(</span><span class="nx">token</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">case</span> <span class="mh">0xe3</span><span class="o">:</span>
+        <span class="nx">tokenLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+        <span class="nx">offset</span><span class="o">+=</span><span class="mi">2</span><span class="p">;</span>
+        <span class="nx">offset</span><span class="o">+=</span><span class="nx">tokenLen</span><span class="p">;</span>
+        <span class="nx">token</span> <span class="o">=</span> <span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-36">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-36">&#182;</a>               </div>               <p>returnStatus </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0x79</span><span class="o">:</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">result</span><span class="p">[</span><span class="nx">resultSetCount</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">initResultSet</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">result</span><span class="p">[</span><span class="nx">resultSetCount</span><span class="o">++</span><span class="p">].</span><span class="nx">returnStatus</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readInt32LE</span><span class="p">(</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+        <span class="nx">offset</span><span class="o">+=</span><span class="mi">4</span><span class="p">;</span>
+        <span class="nx">token</span><span class="o">=</span><span class="nx">data</span><span class="p">[</span><span class="o">++</span><span class="nx">offset</span><span class="p">];</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-37">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-37">&#182;</a>               </div>               <p>resultSet </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0x81</span><span class="o">:</span>
+        <span class="nx">ret</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">parseResultSet</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">,</span> <span class="nx">resultSetCount</span><span class="p">);</span>
+        <span class="nx">offset</span> <span class="o">=</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">offset</span><span class="p">;</span>
+        <span class="nx">resultSetCount</span> <span class="o">=</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">resultSetCount</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">ret</span><span class="p">.</span><span class="nx">nextResultSet</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">token</span> <span class="o">=</span> <span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+        <span class="p">}</span>
+
+
+      <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-38">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-38">&#182;</a>               </div>               <p>info message </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xab</span><span class="o">:</span>
+        <span class="nx">tokenLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+        <span class="nx">offset</span><span class="o">+=</span><span class="mi">2</span><span class="p">;</span>
+        <span class="nx">offset</span><span class="o">+=</span><span class="nx">tokenLen</span><span class="p">;</span>
+        <span class="nx">token</span> <span class="o">=</span> <span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-39">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-39">&#182;</a>               </div>               <p>error message </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xaa</span><span class="o">:</span>
+        <span class="kd">var</span> <span class="nx">tokenLen</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+        <span class="kd">var</span> <span class="nx">ret</span><span class="p">;</span>
+        <span class="nx">offset</span><span class="o">+=</span><span class="mi">2</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">parseErrorMessage</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">offset</span><span class="p">);</span>
+        <span class="k">return</span> <span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-40">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-40">&#182;</a>               </div>               <p>login acknowlegment </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xad</span><span class="o">:</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">isConnected</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-41">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-41">&#182;</a>               </div>               <p>doneInProc </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xff</span><span class="o">:</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-42">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-42">&#182;</a>               </div>               <p>done </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xfd</span><span class="o">:</span>
+        <span class="kd">var</span> <span class="nx">fdState</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+        <span class="nx">offset</span><span class="o">+=</span><span class="mi">2</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span> <span class="p">(</span><span class="nx">fdState</span> <span class="o">&amp;</span> <span class="mh">0x01</span><span class="p">)</span> <span class="o">==</span> <span class="mh">0x01</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">offset</span> <span class="o">+=</span> <span class="mi">6</span><span class="p">;</span>
+          <span class="nx">token</span><span class="o">=</span><span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">{</span>
+          <span class="nx">offset</span> <span class="o">+=</span> <span class="mi">6</span><span class="p">;</span>
+          <span class="nx">token</span><span class="o">=</span><span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+        <span class="p">}</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      <span class="k">default</span><span class="o">:</span>
+        <span class="nx">token</span><span class="o">=</span><span class="nx">data</span><span class="p">[</span><span class="nx">offset</span><span class="p">];</span>
+        <span class="nx">offset</span><span class="o">++</span><span class="p">;</span>
+      <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span> <span class="c1">//while</span>
+
+<span class="p">};</span>
+
+
+</pre></div>             </td>           </tr>                               <tr id="section-43">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-43">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="concatPackets" /></p>
+
+<h2>function concatPackets</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>packetArr <em>array</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>buffer</em> hBuf</li>
+</ul>
+
+<p>concat the chunks of a response to a big parsable packet.</p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+
+<span class="nx">p</span><span class="p">.</span><span class="nx">concatPackets</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">packetArr</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">hLen</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-44">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-44">&#182;</a>               </div>               <p>calculate the length of hBuf </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">packetArr</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">hLen</span> <span class="o">+=</span> <span class="nx">packetArr</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">length</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="nx">hLen</span> <span class="o">-=</span> <span class="p">(</span><span class="nx">packetArr</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">8</span><span class="p">;</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-45">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-45">&#182;</a>               </div>               <p>init hBuf </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="kd">var</span> <span class="nx">hBuf</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="nx">hLen</span><span class="p">);</span>
+  <span class="kd">var</span> <span class="nx">hOffset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-46">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-46">&#182;</a>               </div>               <p>copy the first chunk komplete with header </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="nx">packetArr</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">copy</span><span class="p">(</span><span class="nx">hBuf</span><span class="p">,</span> <span class="nx">hOffset</span> <span class="p">);</span>
+  <span class="nx">hOffset</span> <span class="o">+=</span> <span class="nx">packetArr</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">length</span><span class="p">;</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-47">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-47">&#182;</a>               </div>               <p>copy all other chunks without header </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">packetArr</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">packetArr</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">copy</span><span class="p">(</span><span class="nx">hBuf</span><span class="p">,</span> <span class="nx">hOffset</span><span class="p">,</span> <span class="mi">8</span> <span class="p">);</span>
+    <span class="nx">hOffset</span> <span class="o">+=</span> <span class="nx">packetArr</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">length</span><span class="o">-</span><span class="mi">8</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="k">return</span> <span class="p">(</span><span class="nx">hBuf</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+</pre></div>             </td>           </tr>                               <tr id="section-48">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-48">&#182;</a>               </div>               <p><a href="#top">top</a>    <a id="parseDbResponse" /></p>
+
+<h2>function parseDbResponse</h2>
+
+<h3>Parameter:</h3>
+
+<ul>
+<li>packetArr <em>array</em></li>
+</ul>
+
+<h3>return</h3>
+
+<ul>
+<li><em>object</em> parseResult
+<ul><li><em>array</em> result</li>
+<li><em>object</em> error
+<ul><li><em>int</em> sqlErrNo</li>
+<li><em>string</em> message</li></ul></li>
+<li><em>boolean</em> isConnected</li>
+<li><em>boolean</em> ret</li></ul></li>
+</ul>
+
+<p>General method for parsing all DB responses.
+Wrapper for <a href="#parseLoginResponse">parseLoginResponse</a> and <a href="#parseSqlBatchResponse">parseSqlBatchResponse</a></p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+<span class="nx">p</span><span class="p">.</span><span class="nx">parseDbResponse</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">packetArr</span><span class="p">){</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-49">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-49">&#182;</a>               </div>               <p>read the headerType </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="kd">var</span> <span class="nx">headerType</span> <span class="o">=</span> <span class="nx">packetArr</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">];</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-50">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-50">&#182;</a>               </div>               <p>read the packet length </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="kd">var</span> <span class="nx">len</span> <span class="o">=</span> <span class="nx">packetArr</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">readUInt16BE</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-51">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-51">&#182;</a>               </div>               <p>read the token </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="kd">var</span> <span class="nx">token</span> <span class="o">=</span> <span class="nx">packetArr</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">8</span><span class="p">];</span>
+
+  <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-52">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-52">&#182;</a>               </div>               <p>accept only packets with headerType=4  </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="k">if</span> <span class="p">(</span><span class="nx">headerType</span> <span class="o">==</span> <span class="mh">0x04</span><span class="p">)</span> <span class="p">{</span>
+
+    </pre></div>             </td>           </tr>                               <tr id="section-53">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-53">&#182;</a>               </div>               <p>token handling </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+    <span class="k">switch</span> <span class="p">(</span><span class="nx">token</span><span class="p">)</span> <span class="p">{</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-54">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-54">&#182;</a>               </div>               <p>LoginResponse </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xad</span> <span class="o">:</span>
+      <span class="k">case</span> <span class="mh">0xe3</span> <span class="o">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">isConnected</span><span class="p">){</span>
+          <span class="nx">ret</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">parseSqlBatchResponse</span><span class="p">(</span><span class="nx">packetArr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">packetArr</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">length</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+          <span class="nx">ret</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">parseLoginResponse</span><span class="p">(</span><span class="nx">packetArr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="nx">len</span><span class="p">);</span>
+        <span class="p">}</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-55">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-55">&#182;</a>               </div>               <p>error message </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xaa</span><span class="o">:</span>
+        <span class="kd">var</span> <span class="nx">offset</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+        <span class="kd">var</span> <span class="nx">tokenLen</span> <span class="o">=</span> <span class="nx">packetArr</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="o">++</span><span class="nx">offset</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+        <span class="nx">offset</span><span class="o">+=</span><span class="mi">2</span><span class="p">;</span>
+
+        <span class="k">this</span><span class="p">.</span><span class="nx">parseErrorMessage</span><span class="p">(</span><span class="nx">packetArr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">offset</span><span class="p">);</span>
+        <span class="nx">ret</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-56">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-56">&#182;</a>               </div>               <p>done </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0xfd</span> <span class="o">:</span>
+      <span class="k">case</span> <span class="mh">0xff</span> <span class="o">:</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-57">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-57">&#182;</a>               </div>               <p>SqlBatchResponse </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0x81</span> <span class="o">:</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-58">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-58">&#182;</a>               </div>               <p>returnStatus </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">case</span> <span class="mh">0x79</span> <span class="o">:</span>
+        <span class="kd">var</span> <span class="nx">hBuf</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">concatPackets</span><span class="p">(</span><span class="nx">packetArr</span><span class="p">);</span>
+      <span class="c1">//console.log(&#39;responseData:&#39;+hBuf.length);</span>
+        <span class="nx">ret</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">parseSqlBatchResponse</span><span class="p">(</span><span class="nx">hBuf</span><span class="p">,</span> <span class="nx">hBuf</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+
+      </pre></div>             </td>           </tr>                               <tr id="section-59">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-59">&#182;</a>               </div>               <p>Unrecognized token </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+      <span class="k">default</span><span class="o">:</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;Unrecognized token &quot;</span> <span class="o">+</span> <span class="nx">token</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">else</span>
+  <span class="p">{</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;Unrecognized headerType &quot;</span> <span class="o">+</span> <span class="nx">headerType</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  </pre></div>             </td>           </tr>                               <tr id="section-60">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-60">&#182;</a>               </div>               <p>copying results to returnig object </p>             </td>             <td class="code">               <div class="highlight"><pre>
+
+  <span class="kd">var</span> <span class="nx">parseResult</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">result</span> <span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">result</span><span class="p">,</span>
+                      <span class="nx">error</span> <span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">error</span><span class="p">,</span>
+                      <span class="nx">isConnected</span> <span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">isConnected</span><span class="p">,</span>
+                      <span class="nx">ret</span> <span class="o">:</span> <span class="nx">ret</span>
+                    <span class="p">};</span>
+
+
+  <span class="k">return</span> <span class="p">(</span><span class="nx">parseResult</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">responseParser</span><span class="p">;</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

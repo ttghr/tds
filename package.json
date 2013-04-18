@@ -1,0 +1,19 @@
+{
+  "name": "tds",
+  "main" : "./lib/tds.js",
+  "description": "tds is an implementation of the TDS protocol,which is used for communication with Microsoft's SQL Server.",
+  "author": "H. Ristau <horst.ristau@bertelsmann.com>",
+  "dependencies": {
+    "generic-pool": ">= 2.0.0"
+  },
+  "engine": "node 0.6.6",
+  "keywords": ["tds", "sql server"],
+  "scripts": {
+     "test": "node tds_test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  }
+}
+
