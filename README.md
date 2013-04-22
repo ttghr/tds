@@ -28,19 +28,21 @@ install the **tds** modul manually by copying the tds folder into the node_modul
 
 ```js
 module.exports = {
+
 		ConnectionString : {
 			/** database server */
-			Server:'5CB2175RH5',
+			Server:'yourServer',
+
 			/** database user's name */
-			Login: 'sa',
+			Login: 'yourUser',
 			/** name of database to connect */
-			Database: 'master',
+			Database: 'yourDatabase',
 			/** database user's password */
-			Password: 'pilsbier',
+			Password: 'yourPassword',
 			/** database port */
 			Port: 1433,
 			/** socket-connection timeout */
-			Timeout:10000,
+			Timeout:10000
 		},
 
 		/** number of connections to use in connection pool
@@ -49,7 +51,7 @@ module.exports = {
 		poolSize: 0,
 		/** duration of node-pool timeout */
 		poolIdleTimeout: 30000000,
-		/** tds_port */
+		/** port on that the tds server is listen */
 		tdsServerPort: 8888
 	}
 ```
@@ -57,7 +59,7 @@ module.exports = {
 1. open a commad shell
 2. navigate to your node folder (i.e. "c:\program files\nodejs\")
 3. ```cd node_modules```
-4. ```cd tds```
+4. ```cd tds4node```
 5. start the tds server:
 ```node tds_server```
 
