@@ -1,6 +1,6 @@
 //var util = require('util');
 var http = require('http');
-var tds = require('tds');
+var tds = require('tds4node');
 var url = require('url');
 var util = require('util');
 

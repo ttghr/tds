@@ -1,4 +1,4 @@
-var tds = require('tds');
+var tds = require('tds4node');
 var util = require('util');
 var color = require('ansi-color').set;
 
