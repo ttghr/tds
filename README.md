@@ -109,7 +109,7 @@ after install you are able to run the tests
 
 1. change to your node folder 
 2. ```cd node_modules```
-3. ```cd tds```
+3. ```cd tds4node```
 4. ```node tds_test```
 
 
