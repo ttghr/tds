@@ -6,12 +6,19 @@ which is used for communication with Microsoft's SQL Server.
 
 Status
 ------
-Current version: v0.0.1
+Current version: v0.0.5
+
+Change log:
+----------
+- [v0.0.1] initial version
+- [v0.0.5] bugfixing because of issues 1 - 4
 
 requierements:
 --------------
 - Windows System with [node.js](http://nodejs.org) (version >= 0.6.6)  
 *(other OS should be work too, but not tested until now)*
+- CentOS 6.4 with node.js (version 0.10.4) [node.js](http://nodejs.org)   
+*(has been tested succesfully)*
 - SQL Server (version >= 2000) connection over TCP/IP (SQL authentification),  
  [SQL Server Express 2012](http://www.microsoft.com/de-de/download/details.aspx?id=29062)
 
