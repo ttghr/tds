@@ -28,7 +28,7 @@ module.exports = {
 	
 	'function' : function (name) {
 
-		var query = "select dbo.fn_varbintohexstr(cast('01' as varbinary)) as hexStr";
+		var query = "select master.dbo.fn_varbintohexstr(cast('01' as varbinary)) as hexStr";
 	
 		doQuery(query, name, function(error, result) {
 		console.log(result[0].rows[0]);
@@ -38,7 +38,7 @@ module.exports = {
 
 	'2results': function (name) {
 
-		var query = "exec sp_monitor; select cast(\'2011.12.11\' as smalldatetime) as date, cast(\'9FD78289-4519-4556-B12A-49F03389F4DA\' as uniqueidentifier) as guid;";
+		var query = "SET LANGUAGE deutsch exec sp_monitor; select cast(\'2011.12.11\' as smalldatetime) as date, cast(\'9FD78289-4519-4556-B12A-49F03389F4DA\' as uniqueidentifier) as guid;";
 	
 		doQuery(query, name, function(error, result) {
 		var d = new Date().getFullYear();
@@ -100,7 +100,19 @@ module.exports = {
 		assert.equal(30,result[0].rows[0][2]);  
 	  });
 	},
+	'metaWithTablename': function (name) {
 
+		var query = "USE [tempdb]; \n";
+		    query +="CREATE TABLE [dbo].[tdsTestMeta](	[myText] [text] NULL,	[myNtext] [ntext] NULL,	[myImage] [image] NULL) ON [PRIMARY] \n";
+		    query +="insert into tdsTestMeta values ('defaultText', '9FD78289-4519-4556-B12A-49F03389F4DA', 0x10) \n";
+		    query +="select * from tdsTestMeta \n";
+		    query +="drop table tdsTestMeta \n";
+			doQuery(query, name, function(error, result) {
+		assert.equal('defaultText',result[0].rows[0][0]);
+		assert.equal('9FD78289-4519-4556-B12A-49F03389F4DA',result[0].rows[0][1]);
+		assert.equal(0x10,result[0].rows[0][2]);  
+	  });
+	}
 	
 
 }

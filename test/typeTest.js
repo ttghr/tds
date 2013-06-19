@@ -304,7 +304,7 @@ module.exports = {
 	},
 
 	'smallDatetime' : function (name) {
-		doQuery('select cast(\'2011.12.11\' as smalldatetime) as d', name, function(error, result) {
+		doQuery('SET LANGUAGE deutsch select cast(\'2011.12.11\' as smalldatetime) as d', name, function(error, result) {
 		var d = new Date(Date.UTC(2011, 10, 12));
 	  assert.equal(result[0].rows[0][0].toGMTString(), d.toGMTString() );
 	  });
@@ -312,7 +312,7 @@ module.exports = {
 
 	
 	'smallDatetimeMax' : function (name) {
-		doQuery('select cast(\'2079.06.06 23:59:00\' as smalldatetime) as d', name, function(error, result) {
+		doQuery('SET LANGUAGE deutsch select cast(\'2079.06.06 23:59:00\' as smalldatetime) as d', name, function(error, result) {
 		var d = new Date(Date.UTC(2079, 5, 6, 22, 59, 0));
 	  assert.equal(result[0].rows[0][0].toGMTString(), d.toGMTString() );
 	  });
@@ -320,13 +320,13 @@ module.exports = {
 
 	
 	'smallDatetimeMaxPlus' : function (name) {
-		doQuery('select cast(\'2079.06.07 23:59:00 \' as smalldatetime) as d', name, function(error, result) {
+		doQuery('SET LANGUAGE deutsch select cast(\'2079.06.07 23:59:00 \' as smalldatetime) as d', name, function(error, result) {
 	  assert.equal(error.sqlErrNo, 3606); //Arithmetischer Überlauf
 	  });
 	},
 
 	'smallDatetimeMin' : function (name) {
-		doQuery('select cast(\'1900.01.01\' as smalldatetime) as d', name, function(error, result) {
+		doQuery('SET LANGUAGE deutsch select cast(\'1900.01.01\' as smalldatetime) as d', name, function(error, result) {
 		var d = new Date(Date.UTC(1900, 0, 1));
 	  assert.equal(result[0].rows[0][0].toGMTString(), d.toGMTString() );
 	  });
@@ -334,20 +334,20 @@ module.exports = {
 
 	
 	'smallDatetimeMinMinus' : function (name) {
-		doQuery('select cast(\'1900.01.01\' as smalldatetime)-1 as d', name, function(error, result) {
+		doQuery('SET LANGUAGE deutsch select cast(\'1900.01.01\' as smalldatetime)-1 as d', name, function(error, result) {
 	  assert.equal(error.sqlErrNo, 3606); //Arithmetischer Überlauf
 	  });
 	},
 
 	'smallDatetimeNull' : function (name) {
-		doQuery('select cast( NULL as smalldatetime) as d', name, function(error, result) {
+		doQuery('SET LANGUAGE deutsch select cast( NULL as smalldatetime) as d', name, function(error, result) {
 	  assert.equal(result[0].rows[0][0], null);
 	  });
 	},
 
 
 	'datetime' : function (name) {
-		doQuery('select cast(\'2011.12.11\' as datetime) as d', name, function(error, result) {
+		doQuery('SET LANGUAGE deutsch select cast(\'2011.12.11\' as datetime) as d', name, function(error, result) {
 		var d = new Date(Date.UTC(2011, 10, 12));
 	  assert.equal(result[0].rows[0][0].toGMTString(), d.toGMTString() );
 	  });
@@ -355,7 +355,7 @@ module.exports = {
 
 	
 	'datetimeMax' : function (name) {
-		doQuery('select cast(\'31.12.9999 23:59:59\' as datetime) as d', name, function(error, result) {
+		doQuery('SET LANGUAGE deutsch select cast(\'31.12.9999 23:59:59\' as datetime) as d', name, function(error, result) {
 		var d = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
 	  assert.equal(result[0].rows[0][0].toGMTString(), d.toGMTString() );
 	  });
@@ -363,13 +363,13 @@ module.exports = {
 
 	
 	'datetimeMaxPlus' : function (name) {
-		doQuery('select cast(\'31.12.9999 23:59:59\' as datetime)+1 as d', name, function(error, result) {
+		doQuery('SET LANGUAGE deutsch select cast(\'31.12.9999 23:59:59\' as datetime)+1 as d', name, function(error, result) {
 	  assert.equal(error.sqlErrNo, 3606); //Arithmetischer Überlauf
 	  });
 	},
 
 	'datetimeMin' : function (name) {
-		doQuery('select cast(\'1753.01.01\' as datetime) as d', name, function(error, result) {
+		doQuery('SET LANGUAGE deutsch select cast(\'1753.01.01\' as datetime) as d', name, function(error, result) {
 		var d = new Date(Date.UTC(1970, 0, 1));// see typeParser.js javascrit date starts at 01.01.1970
 	  assert.equal(result[0].rows[0][0].toGMTString(), d.toGMTString() );
 	  });
@@ -377,13 +377,13 @@ module.exports = {
 
 	
 	'datetimeMinMinus' : function (name) {
-		doQuery('select cast(\'1753.01.01\' as datetime)-1 as d', name, function(error, result) {
+		doQuery('SET LANGUAGE deutsch select cast(\'1753.01.01\' as datetime)-1 as d', name, function(error, result) {
 	  assert.equal(error.sqlErrNo, 3606); //Arithmetischer Überlauf
 	  });
 	},
 
 	'datetimeNull' : function (name) {
-		doQuery('select cast( NULL as datetime) as d', name, function(error, result) {
+		doQuery('SET LANGUAGE deutsch select cast( NULL as datetime) as d', name, function(error, result) {
 	  assert.equal(result[0].rows[0][0], null);
 	  });
 	},
@@ -593,6 +593,12 @@ module.exports = {
 	  assert.equal(result[0].rows[0][0][23], '-' ); 
 	  });
 	},
+	'emptyResultSet' : function (name,tds) {
+		doQuery('select max(id) from msdb.dbo.sysalerts where id<-1', name, function(error, result) {
+		console.log(result[0].rows[0][0]);
+	  assert.equal(result[0].rows[0][0], null ); 
+	  });
+	}
 
 }
 
