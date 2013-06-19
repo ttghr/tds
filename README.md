@@ -10,8 +10,8 @@ Current version: v0.0.5
 
 Change log:
 ----------
-- [v0.0.1] initial version
-- [v0.0.5] bugfixing because of issues 1 - 4
+- **[v0.0.1]** initial version
+- **[v0.0.5]** bugfixing because of issues 1 - 4
 
 requierements:
 --------------
