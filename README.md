@@ -6,13 +6,14 @@ which is used for communication with Microsoft's SQL Server.
 
 Status
 ------
-Current version: v0.0.5
+Current version: v0.0.7
 
 Change log:
 ----------
 - **[v0.0.1]** initial version
 - **[v0.0.5]** bugfixing because of issues 1 - 4
 - **[v0.0.6]** bugfixing because of issues 5
+- **[v0.0.7]** bugfixing because of issues 6
 
 requierements:
 --------------
