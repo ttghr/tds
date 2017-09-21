@@ -20,6 +20,6 @@
   "scripts":{
     "eslint": "eslint *.js"
   },
-  "precommit": "eslint"
+  "pre-commit": "eslint"
 }
 
