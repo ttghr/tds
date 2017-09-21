@@ -16,10 +16,14 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/ttghr/tds.git"
+<<<<<<< HEAD
   },
   "scripts":{
     "eslint": "eslint *.js"
   },
   "pre-commit": "eslint"
+=======
+  }
+>>>>>>> parent of 903f40d... eslint
 }
 
