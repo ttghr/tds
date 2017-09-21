@@ -16,6 +16,10 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/ttghr/tds.git"
-  }
+  },
+  "scripts":{
+    "eslint": "eslint *.js"
+  },
+  "precommit": "eslint"
 }
 
