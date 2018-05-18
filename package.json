@@ -5,7 +5,7 @@
   "description": "tds is an implementation of the TDS protocol,which is used for communication with Microsoft's SQL Server.",
   "author": "ttghr <ttg1@arcor.de>",
   "dependencies": {
-    "generic-pool": ">= 2.0.0",
+    "generic-pool": "~2.5",
     "ansi-color": ">= 0.2.1"
   },
   "engine": "node 0.6.6",
